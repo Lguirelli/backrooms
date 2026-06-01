@@ -30,199 +30,45 @@ const CAMERA_FRAMES = [[168.574677,0.047582,1.570796],[168.563919,0.047486,1.570
 const CAMERA_Y = 4.0348629951;
 const CAMERA_Z = 0.7915309668;
 
+// Ajuste de rotação por etapa.
+// Início: +180 graus.
+// Final: -45 graus.
+// O valor é interpolado suavemente durante o scroll.
+const CAMERA_START_YAW_OFFSET = Math.PI;
+const CAMERA_END_YAW_OFFSET = -THREE.MathUtils.degToRad(45);
+
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 4000);
-camera.position.set(CAMERA_FRAMES[0][0], CAMERA_Y, CAMERA_Z);
-camera.rotation.set(CAMERA_FRAMES[0][1], CAMERA_FRAMES[0][2], 0, 'YXZ');
 
-const ambient = new THREE.HemisphereLight(0xfff2c7, 0x171109, 1.28);
-scene.add(ambient);
+// Bezier cúbica para suavizar entrada e saída do movimento.
+function cubicBezier(t, p0 = 0, p1 = 0.18, p2 = 0.82, p3 = 1) {
+  const clampedT = THREE.MathUtils.clamp(t, 0, 1);
+  const u = 1 - clampedT;
 
-const keyLight = new THREE.DirectionalLight(0xffe8b0, 1.28);
-keyLight.position.set(120, 80, 50);
-scene.add(keyLight);
-
-const fillLight = new THREE.DirectionalLight(0xb8ae68, 0.58);
-fillLight.position.set(-80, 35, -40);
-scene.add(fillLight);
-
-const fluorescent = new THREE.PointLight(0xffecaa, 1, 64);
-fluorescent.position.set(80, 7, -8);
-scene.add(fluorescent);
-
-let modelLoaded = false;
-
-const textureLoader = new THREE.TextureLoader();
-const maxAnisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
-
-function setStatus(text, hideDelay = 1800) {
-  if (!statusEl) return;
-  statusEl.classList.remove('is-hidden');
-  statusEl.textContent = text;
-  window.setTimeout(() => statusEl.classList.add('is-hidden'), hideDelay);
-}
-
-function loadTexture(url, repeatX = 1, repeatY = 1, colorSpace = THREE.SRGBColorSpace) {
-  const texture = textureLoader.load(
-    url,
-    (loadedTexture) => {
-      loadedTexture.needsUpdate = true;
-    },
-    undefined,
-    (error) => {
-      console.warn(`Textura não encontrada ou inválida: ${url}`, error);
-    }
+  return (
+    u * u * u * p0 +
+    3 * u * u * clampedT * p1 +
+    3 * u * clampedT * clampedT * p2 +
+    clampedT * clampedT * clampedT * p3
   );
-
-  texture.colorSpace = colorSpace;
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(repeatX, repeatY);
-  texture.anisotropy = maxAnisotropy;
-  texture.flipY = false;
-  texture.needsUpdate = true;
-
-  return texture;
 }
 
-const textures = {
-  carpet: loadTexture('./assets/carpet.jpg', 9, 9),
-  wallDots: loadTexture('./assets/wall.png', 5, 5),
-  wallChevron: loadTexture('./assets/wall2.png', 7, 7),
-  ceiling: loadTexture('./assets/ceiling-texture.png', 6, 6),
-  metalGrid: loadTexture('./assets/wall.png', 3, 3)
-};
-
-function makeStandardMaterial(options) {
-  const material = new THREE.MeshStandardMaterial({
-    side: THREE.DoubleSide,
-    ...options
-  });
-
-  material.needsUpdate = true;
-  return material;
+function smoothCameraT(t) {
+  return cubicBezier(t, 0, 0.18, 0.82, 1);
 }
 
-const materialMap = {
-  grid: makeStandardMaterial({
-    name: 'web_grid_metal',
-    map: textures.metalGrid,
-    color: 0xd8d2a4,
-    roughness: 0.24,
-    metalness: 0.9
-  }),
-  chao: makeStandardMaterial({
-    name: 'web_floor_carpet',
-    map: textures.carpet,
-    color: 0xffffff,
-    roughness: 0.96,
-    metalness: 0
-  }),
-  luz: makeStandardMaterial({
-    name: 'web_light_emissive',
-    color: 0xfff4c4,
-    roughness: 0.35,
-    metalness: 0,
-    emissive: 0xfff1b8,
-    emissiveIntensity: 2.6
-  }),
-  wall: makeStandardMaterial({
-    name: 'web_wall_chevron',
-    map: textures.wallChevron,
-    color: 0xffffff,
-    roughness: 0.9,
-    metalness: 0
-  }),
-  wallDots: makeStandardMaterial({
-    name: 'web_wall_dots',
-    map: textures.wallDots,
-    color: 0xffffff,
-    roughness: 0.9,
-    metalness: 0
-  }),
-  teto: makeStandardMaterial({
-    name: 'web_ceiling_texture',
-    map: textures.ceiling,
-    color: 0xcfcf9f,
-    roughness: 0.92,
-    metalness: 0
-  }),
-  default: makeStandardMaterial({
-    name: 'web_default_warm',
-    color: 0xbfb786,
-    roughness: 0.85,
-    metalness: 0
-  })
-};
-
-function normalize(value = '') {
-  return String(value)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[\s.-]+/g, '_');
-}
-
-function chooseMaterial(object) {
-  const originalMaterialNames = Array.isArray(object.material)
-    ? object.material.map((mat) => mat?.name || '').join(' ')
-    : object.material?.name || '';
-
-  const name = normalize(`${object.name || ''} ${originalMaterialNames}`);
-
-  // O GLTF atual usa estes materiais principais:
-  // grid, chao, luz, wall.001, teto
-  if (name.includes('luz') || name.includes('light') || name.includes('lamp') || name.includes('emissive')) return materialMap.luz;
-  if (name.includes('grid') || name.includes('grade') || name.includes('metal') || name.includes('frame')) return materialMap.grid;
-  if (name.includes('chao') || name.includes('piso') || name.includes('floor') || name.includes('carpet')) return materialMap.chao;
-  if (name.includes('teto') || name.includes('ceiling')) return materialMap.teto;
-  if (name.includes('wall_001') || name.includes('wall') || name.includes('parede')) return materialMap.wall;
-
-  return materialMap.default;
-}
-
-function addRealLightNearMesh(object) {
-  const name = `${object.name}_web_light`;
-  if (scene.getObjectByName(name)) return;
-
-  const box = new THREE.Box3().setFromObject(object);
-  const center = box.getCenter(new THREE.Vector3());
-
-  const light = new THREE.PointLight(0xffecaa, 0.72, 34);
-  light.name = name;
-  light.position.copy(center);
-  light.position.y -= 0.25;
-  scene.add(light);
-}
-
-function applyMaterials(root) {
-  root.traverse((object) => {
-    if (!object.isMesh) return;
-
-    object.frustumCulled = false;
-    object.castShadow = false;
-    object.receiveShadow = false;
-
-    if (object.geometry) {
-      object.geometry.computeVertexNormals();
-      object.geometry.computeBoundingBox();
-    }
-
-    const selectedMaterial = chooseMaterial(object);
-
-    // Clona para evitar que uma alteração por malha contamine outras superfícies.
-    object.material = selectedMaterial.clone();
-    object.material.needsUpdate = true;
-
-    if (selectedMaterial.name.includes('light')) {
-      addRealLightNearMesh(object);
-    }
-  });
+function getCameraYawOffset(progress) {
+  return THREE.MathUtils.lerp(
+    CAMERA_START_YAW_OFFSET,
+    CAMERA_END_YAW_OFFSET,
+    smoothCameraT(progress)
+  );
 }
 
 function getScrollProgress() {
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
   if (maxScroll <= 0) return 0;
-  return Math.min(Math.max(window.scrollY / maxScroll, 0), 1);
+
+  return THREE.MathUtils.clamp(window.scrollY / maxScroll, 0, 1);
 }
 
 function lerp(a, b, t) {
@@ -231,22 +77,37 @@ function lerp(a, b, t) {
 
 function setCameraFromScroll() {
   const progress = getScrollProgress();
-  const scaled = progress * (CAMERA_FRAMES.length - 1);
-  const index = Math.floor(scaled);
-  const nextIndex = Math.min(index + 1, CAMERA_FRAMES.length - 1);
-  const t = scaled - index;
+
+  // Suaviza o progresso geral do scroll.
+  const smoothProgress = smoothCameraT(progress);
+
+  const maxFrameIndex = CAMERA_FRAMES.length - 1;
+  const scaled = smoothProgress * maxFrameIndex;
+
+  const index = Math.min(Math.floor(scaled), maxFrameIndex);
+  const nextIndex = Math.min(index + 1, maxFrameIndex);
+
+  const localT = scaled - index;
+
+  // Suaviza também a transição entre um frame e outro.
+  const smoothLocalT = smoothCameraT(localT);
 
   const current = CAMERA_FRAMES[index];
   const next = CAMERA_FRAMES[nextIndex];
 
-  const x = lerp(current[0], next[0], t);
-  const pitch = lerp(current[1], next[1], t);
-  const yaw = lerp(current[2], next[2], t);
+  const x = lerp(current[0], next[0], smoothLocalT);
+  const pitch = lerp(current[1], next[1], smoothLocalT);
+  const yaw = lerp(current[2], next[2], smoothLocalT);
+
+  const yawOffset = getCameraYawOffset(progress);
 
   camera.position.set(x, CAMERA_Y, CAMERA_Z);
-  camera.rotation.set(pitch, yaw, 0, 'YXZ');
+  camera.rotation.set(pitch, yaw + yawOffset, 0, 'YXZ');
   camera.updateProjectionMatrix();
 }
+
+// Aplica a posição inicial já corrigida.
+setCameraFromScroll();
 
 const loader = new GLTFLoader();
 
