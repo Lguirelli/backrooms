@@ -16,78 +16,63 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.18;
-renderer.setClearColor(0x050505, 1);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMappingExposure = 0.82;
+renderer.setClearColor(0x030302, 1);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050505);
-scene.fog = new THREE.FogExp2(0x111006, 0.018);
+scene.background = new THREE.Color(0x030302);
+scene.fog = new THREE.FogExp2(0x0b0903, 0.022);
 
-let camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.05, 4000);
-camera.position.set(0, 1.7, 7);
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.05, 5000);
+camera.position.set(-10, 3.4, 16);
+camera.lookAt(-18, 3.1, -8);
 
-const ambientLight = new THREE.AmbientLight(0xfff2c7, 1.25);
-scene.add(ambientLight);
+const warmAmbient = new THREE.HemisphereLight(0xffe7a2, 0x151008, 0.75);
+scene.add(warmAmbient);
 
-const keyLight = new THREE.DirectionalLight(0xfff1bc, 2.4);
-keyLight.position.set(4, 7, 5);
-keyLight.castShadow = true;
+const keyLight = new THREE.DirectionalLight(0xffe8a8, 1.45);
+keyLight.position.set(-8, 12, 10);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0xb4b27b, 1.05);
-fillLight.position.set(-5, 3, -4);
-scene.add(fillLight);
+const fluorescentRig = new THREE.Group();
+scene.add(fluorescentRig);
 
-const fluorescent = new THREE.PointLight(0xfff1bd, 1.6, 36);
-fluorescent.position.set(0, 4, -6);
-scene.add(fluorescent);
-
-let mixer = null;
-let activeAction = null;
-let animationDuration = 1;
-let targetTime = 0;
-let currentTime = 0;
-let hasCameraAnimation = false;
+let modelRoot = null;
+let modelBox = null;
 let glbLoaded = false;
 
 const fallbackGroup = new THREE.Group();
 scene.add(fallbackGroup);
 
 function createFallbackCorridor() {
-  const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xb4b27b, roughness: 0.94, metalness: 0.02, side: THREE.DoubleSide });
-  const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x665b2b, roughness: 1, side: THREE.DoubleSide });
+  const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x928b45, roughness: 0.96, metalness: 0.01, side: THREE.DoubleSide });
+  const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x5e4d22, roughness: 1, side: THREE.DoubleSide });
   const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x8f8a55, roughness: 0.92, side: THREE.DoubleSide });
 
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(18, 0.08, 90), floorMaterial);
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(20, 0.08, 90), floorMaterial);
   floor.position.set(0, -0.05, -32);
   fallbackGroup.add(floor);
 
-  const ceiling = new THREE.Mesh(new THREE.BoxGeometry(18, 0.08, 90), ceilingMaterial);
-  ceiling.position.set(0, 4.2, -32);
+  const ceiling = new THREE.Mesh(new THREE.BoxGeometry(20, 0.08, 90), ceilingMaterial);
+  ceiling.position.set(0, 5.2, -32);
   fallbackGroup.add(ceiling);
 
-  const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.08, 4.2, 90), wallMaterial);
-  leftWall.position.set(-9, 2.05, -32);
+  const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, 5.2, 90), wallMaterial);
+  leftWall.position.set(-10, 2.55, -32);
   fallbackGroup.add(leftWall);
 
-  const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.08, 4.2, 90), wallMaterial);
-  rightWall.position.set(9, 2.05, -32);
+  const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, 5.2, 90), wallMaterial);
+  rightWall.position.set(10, 2.55, -32);
   fallbackGroup.add(rightWall);
 
-  const backWall = new THREE.Mesh(new THREE.BoxGeometry(18, 4.2, 0.08), wallMaterial);
-  backWall.position.set(0, 2.05, -76);
-  fallbackGroup.add(backWall);
-
-  const lightMaterial = new THREE.MeshBasicMaterial({ color: 0xfff4bd });
-  for (let z = 4; z > -72; z -= 8) {
+  const lightMaterial = new THREE.MeshBasicMaterial({ color: 0xfff2b2 });
+  for (let z = 5; z > -72; z -= 8) {
     const light = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.05, 0.28), lightMaterial);
-    light.position.set(0, 4.15, z);
+    light.position.set(0, 5.05, z);
     fallbackGroup.add(light);
 
-    const point = new THREE.PointLight(0xfff2bd, 0.65, 12);
-    point.position.set(0, 3.75, z);
+    const point = new THREE.PointLight(0xffe7aa, 0.8, 16);
+    point.position.set(0, 4.6, z);
     fallbackGroup.add(point);
   }
 }
@@ -102,26 +87,61 @@ function normalizeModel(root) {
 
   root.position.sub(center);
 
-  // Mantém o GLB visível mesmo se vier de Blender com escala muito grande.
   if (maxAxis > 160 || maxAxis < 2) {
     root.scale.multiplyScalar(42 / maxAxis);
   }
 
+  // Mantém uma leitura mais cinematográfica: modelo um pouco abaixo da câmera,
+  // evitando a composição branca/chapada do teto dominando o fundo.
+  root.position.y -= 1.2;
+  root.rotation.y = -Math.PI / 2;
+
   root.traverse((object) => {
     if (object.isMesh) {
       object.frustumCulled = false;
-      object.castShadow = true;
+      object.castShadow = false;
       object.receiveShadow = true;
 
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       materials.filter(Boolean).forEach((mat) => {
         mat.side = THREE.DoubleSide;
-        if ('roughness' in mat) mat.roughness = Math.min(1, mat.roughness + 0.14);
-        if ('metalness' in mat) mat.metalness = Math.max(0, mat.metalness * 0.35);
+
+        if ('roughness' in mat) mat.roughness = Math.min(1, mat.roughness + 0.18);
+        if ('metalness' in mat) mat.metalness = Math.max(0, mat.metalness * 0.25);
+
+        // Reduz aparência lavada do GLB no fundo.
+        if (mat.color) {
+          mat.color.convertSRGBToLinear();
+          mat.color.multiplyScalar(0.72);
+        }
+
         mat.needsUpdate = true;
       });
     }
   });
+
+  root.updateMatrixWorld(true);
+  modelBox = new THREE.Box3().setFromObject(root);
+}
+
+function addCinematicLights() {
+  fluorescentRig.clear();
+
+  const stripMat = new THREE.MeshBasicMaterial({ color: 0xffefb6 });
+
+  for (let i = 0; i < 8; i += 1) {
+    const z = 10 - i * 8;
+    const x = -6 + (i % 3) * 2.8;
+
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.05, 0.32), stripMat);
+    strip.position.set(x, 4.7, z);
+    strip.rotation.y = 0.05;
+    fluorescentRig.add(strip);
+
+    const light = new THREE.PointLight(0xffe8ac, 0.95, 20);
+    light.position.set(x, 4.35, z);
+    fluorescentRig.add(light);
+  }
 }
 
 function getScrollProgress() {
@@ -130,28 +150,34 @@ function getScrollProgress() {
   return Math.min(window.scrollY / maxScroll, 1);
 }
 
-function updateCameraFromScroll() {
-  const progress = getScrollProgress();
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
-  if (mixer && activeAction && hasCameraAnimation && !reducedMotion) {
-    targetTime = progress * animationDuration;
-    currentTime = THREE.MathUtils.lerp(currentTime, targetTime, 0.075);
+function updateProceduralCamera() {
+  const p = reducedMotion ? 0.08 : getScrollProgress();
 
-    activeAction.enabled = true;
-    activeAction.paused = false;
-    mixer.setTime(currentTime);
-    return;
-  }
+  // Camera inspirada na referência enviada: lateral, baixa, comprimida,
+  // olhando para dentro de corredores amarelados e não para o teto.
+  const segment = p * 4.0;
+  const drift = Math.sin(segment * Math.PI * 0.9) * 2.0;
+  const side = Math.sin(segment * Math.PI * 0.45) * 1.1;
 
-  if (!reducedMotion) {
-    const z = 8 - progress * 52;
-    camera.position.set(
-      Math.sin(progress * Math.PI * 1.25) * 1.1,
-      1.72 + Math.sin(progress * Math.PI) * 0.28,
-      z
-    );
-    camera.lookAt(Math.sin(progress * Math.PI * 1.1) * 1.6, 1.55, z - 10);
-  }
+  const x = -12 + drift;
+  const y = 2.55 + Math.sin(p * Math.PI * 2) * 0.12;
+  const z = 16 - p * 48;
+
+  const targetX = -19 + side;
+  const targetY = 2.38 + Math.sin(p * Math.PI * 1.8) * 0.08;
+  const targetZ = z - 15;
+
+  camera.position.lerp(new THREE.Vector3(x, y, z), 0.075);
+  camera.lookAt(targetX, targetY, targetZ);
+
+  const fovTarget = 34 + smoothstep(0.25, 0.9, p) * 8;
+  camera.fov += (fovTarget - camera.fov) * 0.04;
+  camera.updateProjectionMatrix();
 }
 
 const loader = new GLTFLoader();
@@ -169,51 +195,15 @@ loader.load(
     window.clearTimeout(loadTimeout);
     glbLoaded = true;
 
-    const model = gltf.scene;
-    normalizeModel(model);
-    scene.add(model);
-
-    const exportedCamera = gltf.cameras?.[0];
-
-    if (exportedCamera && exportedCamera.isCamera) {
-      camera = exportedCamera;
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.near = Math.max(0.01, camera.near || 0.05);
-      camera.far = Math.max(4000, camera.far || 4000);
-      camera.updateProjectionMatrix();
-    } else {
-      camera.position.set(0, 1.8, 8);
-      camera.lookAt(0, 1.6, -12);
-    }
-
-    if (gltf.animations && gltf.animations.length > 0) {
-      const clip = gltf.animations[0];
-      mixer = new THREE.AnimationMixer(model);
-      activeAction = mixer.clipAction(clip);
-      activeAction.reset();
-      activeAction.setLoop(THREE.LoopOnce, 1);
-      activeAction.clampWhenFinished = true;
-      activeAction.enabled = true;
-      activeAction.paused = false;
-      activeAction.play();
-
-      animationDuration = clip.duration || 1;
-
-      const cameraName = exportedCamera?.name || 'Camera';
-      hasCameraAnimation = clip.tracks.some((track) => {
-        const name = track.name || '';
-        return name.includes(cameraName) || name.includes('Camera');
-      });
-
-      mixer.setTime(0);
-    }
+    modelRoot = gltf.scene;
+    normalizeModel(modelRoot);
+    scene.add(modelRoot);
+    addCinematicLights();
 
     fallbackGroup.visible = false;
 
     if (statusEl) {
-      statusEl.textContent = hasCameraAnimation
-        ? 'câmera do GLB conectada ao scroll'
-        : 'GLB carregado / movimento procedural ativo';
+      statusEl.textContent = 'câmera cinematográfica conectada ao scroll';
       window.setTimeout(() => statusEl.classList.add('is-hidden'), 1800);
     }
   },
@@ -243,11 +233,14 @@ loader.load(
 function animate() {
   requestAnimationFrame(animate);
 
-  updateCameraFromScroll();
+  updateProceduralCamera();
 
-  // Pequeno flicker cinematográfico, lento e seguro.
   const t = performance.now() * 0.001;
-  fluorescent.intensity = 1.45 + Math.sin(t * 1.7) * 0.08 + Math.sin(t * 5.1) * 0.025;
+  fluorescentRig.children.forEach((child) => {
+    if (child.isPointLight) {
+      child.intensity = 0.88 + Math.sin(t * 1.4 + child.position.z) * 0.045;
+    }
+  });
 
   renderer.render(scene, camera);
 }
@@ -258,8 +251,6 @@ window.addEventListener('resize', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.35 : 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  if (camera && camera.isPerspectiveCamera) {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-  }
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 });

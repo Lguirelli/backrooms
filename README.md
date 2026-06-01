@@ -73,3 +73,19 @@ Ajustes feitos:
 - movimento de câmera do GLB conectado ao scroll
 - renderização mais cinematográfica com ACES, fog, luz fluorescente e contraste controlado
 - fade da seção Possibilidades corrigido com script robusto após DOMContentLoaded
+
+
+## Correção cinematográfica do background
+
+O arquivo `backrooms SITE1 camera.glb` enviado não contém câmera, nós ou animações exportadas. Por isso, este patch não usa esse GLB como asset.
+
+A correção foi feita em código:
+
+- câmera procedural inspirada na referência enviada
+- ângulo mais baixo e lateral
+- FOV mais cinematográfico
+- fog mais denso
+- exposição reduzida
+- contraste, saturação e brightness ajustados no canvas
+- luz fluorescente quente e sutil
+- movimento da câmera conectado ao scroll
