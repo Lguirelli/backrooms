@@ -49,3 +49,5 @@ http://localhost:8000
 - Responsivo para celular.
 
 - nova seção "Possibilidades" com fade entre imagens reais de ocupação
+
+- fundos e boxes transparentes para destacar o canvas 3D em movimento
