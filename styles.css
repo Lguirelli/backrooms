@@ -1181,3 +1181,93 @@ h3,
   box-shadow: none !important;
   backdrop-filter: none !important;
 }
+
+
+/* Patch — benefícios centralizados e transparentes */
+#benefits .benefits-heading-center {
+  display: block !important;
+  text-align: center !important;
+  margin-inline: auto !important;
+  max-width: 980px !important;
+}
+
+#benefits .benefits-heading-center h2 {
+  margin-inline: auto !important;
+  max-width: 980px !important;
+}
+
+#benefits .benefit-grid {
+  gap: 24px !important;
+}
+
+#benefits .benefit-card {
+  min-height: 236px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: center !important;
+  padding: 26px 20px 24px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+#benefits .benefit-card::before,
+#benefits .benefit-card::after {
+  display: none !important;
+  content: none !important;
+}
+
+#benefits .benefit-card > * {
+  position: static !important;
+  z-index: auto !important;
+}
+
+#benefits .benefit-card span {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto 22px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(216,192,92,.72) !important;
+  background: transparent !important;
+  color: var(--yellow) !important;
+  font-size: 12px !important;
+  letter-spacing: .16em !important;
+  line-height: 1 !important;
+  box-shadow: 0 0 0 1px rgba(216,192,92,.08), 0 0 24px rgba(216,192,92,.08) !important;
+}
+
+#benefits .benefit-card h3 {
+  margin: 0 0 16px !important;
+  text-align: center !important;
+}
+
+#benefits .benefit-card p {
+  max-width: 320px !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+@media (max-width: 960px) {
+  #benefits .benefit-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #benefits .benefit-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  #benefits .benefit-card {
+    min-height: auto !important;
+    padding: 16px 10px 10px !important;
+  }
+}
