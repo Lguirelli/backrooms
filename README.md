@@ -1,4 +1,4 @@
-# Oregon 811 — landing page estática com GLB corrigido
+# Unidade 811 — landing page estática com GLB corrigido
 
 Versão sem npm, com HTML, CSS e JavaScript puro.
 
@@ -15,7 +15,7 @@ Suba o conteúdo desta pasta na raiz do repositório:
 ├─ README.md
 └─ assets/
    ├─ backrooms.glb
-   └─ planta-implantacao-oregon-811.png
+   └─ planta-implantacao-unidade-811.png
 ```
 
 Depois ative:
@@ -53,24 +53,23 @@ http://localhost:8000
 - fundos e boxes transparentes para destacar o canvas 3D em movimento
 
 
-## Patch aplicado para o GLB aparecer
+## Patch Unidade 811
 
-Este patch corrige o carregamento do Three.js no navegador.
-
-O problema mais provável era o `GLTFLoader.js` importar `three` como módulo interno sem um `importmap`, fazendo o navegador travar antes de renderizar o GLB.
-
-Arquivos alterados:
+Este patch atualiza:
 
 ```txt
 index.html
+styles.css
+script.js
 three-background.js
+assets/backrooms.glb
 README.md
 ```
 
-Não inclui assets.
+Ajustes feitos:
 
-Mantenha o arquivo abaixo no repositório:
-
-```txt
-assets/backrooms.glb
-```
+- nome visível do projeto alterado para Unidade 811
+- GLB original substitui o fundo 3D atual
+- movimento de câmera do GLB conectado ao scroll
+- renderização mais cinematográfica com ACES, fog, luz fluorescente e contraste controlado
+- fade da seção Possibilidades corrigido com script robusto após DOMContentLoaded

@@ -16,53 +16,49 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.35;
+renderer.toneMappingExposure = 1.18;
 renderer.setClearColor(0x050505, 1);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x111006, 0.018);
 
-let camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.05, 2000);
+let camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.05, 4000);
 camera.position.set(0, 1.7, 7);
 
-scene.add(new THREE.AmbientLight(0xfff7d8, 1.45));
+const ambientLight = new THREE.AmbientLight(0xfff2c7, 1.25);
+scene.add(ambientLight);
 
-const keyLight = new THREE.DirectionalLight(0xfff3c1, 2.8);
+const keyLight = new THREE.DirectionalLight(0xfff1bc, 2.4);
 keyLight.position.set(4, 7, 5);
+keyLight.castShadow = true;
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0xb4b27b, 1.25);
+const fillLight = new THREE.DirectionalLight(0xb4b27b, 1.05);
 fillLight.position.set(-5, 3, -4);
 scene.add(fillLight);
 
+const fluorescent = new THREE.PointLight(0xfff1bd, 1.6, 36);
+fluorescent.position.set(0, 4, -6);
+scene.add(fluorescent);
+
 let mixer = null;
+let activeAction = null;
 let animationDuration = 1;
 let targetTime = 0;
 let currentTime = 0;
+let hasCameraAnimation = false;
 let glbLoaded = false;
 
 const fallbackGroup = new THREE.Group();
 scene.add(fallbackGroup);
 
 function createFallbackCorridor() {
-  const wallMaterial = new THREE.MeshStandardMaterial({
-    color: 0xb4b27b,
-    roughness: 0.94,
-    metalness: 0.02,
-    side: THREE.DoubleSide
-  });
-
-  const floorMaterial = new THREE.MeshStandardMaterial({
-    color: 0x665b2b,
-    roughness: 1,
-    side: THREE.DoubleSide
-  });
-
-  const ceilingMaterial = new THREE.MeshStandardMaterial({
-    color: 0x8f8a55,
-    roughness: 0.92,
-    side: THREE.DoubleSide
-  });
+  const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xb4b27b, roughness: 0.94, metalness: 0.02, side: THREE.DoubleSide });
+  const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x665b2b, roughness: 1, side: THREE.DoubleSide });
+  const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x8f8a55, roughness: 0.92, side: THREE.DoubleSide });
 
   const floor = new THREE.Mesh(new THREE.BoxGeometry(18, 0.08, 90), floorMaterial);
   floor.position.set(0, -0.05, -32);
@@ -94,14 +90,6 @@ function createFallbackCorridor() {
     point.position.set(0, 3.75, z);
     fallbackGroup.add(point);
   }
-
-  // Paredes modulares laterais para dar profundidade mesmo antes do GLB carregar.
-  for (let z = -4; z > -62; z -= 12) {
-    const divider = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.6, 0.12), wallMaterial);
-    divider.position.set(z % 24 === 0 ? -5.5 : 5.5, 1.75, z);
-    divider.rotation.y = Math.PI / 2;
-    fallbackGroup.add(divider);
-  }
 }
 
 createFallbackCorridor();
@@ -114,39 +102,72 @@ function normalizeModel(root) {
 
   root.position.sub(center);
 
-  // Garante que o modelo apareça mesmo se exportado muito grande ou muito pequeno.
-  if (maxAxis > 120 || maxAxis < 2) {
-    root.scale.multiplyScalar(34 / maxAxis);
+  // Mantém o GLB visível mesmo se vier de Blender com escala muito grande.
+  if (maxAxis > 160 || maxAxis < 2) {
+    root.scale.multiplyScalar(42 / maxAxis);
   }
 
   root.traverse((object) => {
     if (object.isMesh) {
       object.frustumCulled = false;
-      const mats = Array.isArray(object.material) ? object.material : [object.material];
+      object.castShadow = true;
+      object.receiveShadow = true;
 
-      mats.filter(Boolean).forEach((mat) => {
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.filter(Boolean).forEach((mat) => {
         mat.side = THREE.DoubleSide;
-        if ('roughness' in mat) mat.roughness = Math.min(1, mat.roughness + 0.12);
+        if ('roughness' in mat) mat.roughness = Math.min(1, mat.roughness + 0.14);
+        if ('metalness' in mat) mat.metalness = Math.max(0, mat.metalness * 0.35);
         mat.needsUpdate = true;
       });
     }
   });
 }
 
+function getScrollProgress() {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  if (maxScroll <= 0) return 0;
+  return Math.min(window.scrollY / maxScroll, 1);
+}
+
+function updateCameraFromScroll() {
+  const progress = getScrollProgress();
+
+  if (mixer && activeAction && hasCameraAnimation && !reducedMotion) {
+    targetTime = progress * animationDuration;
+    currentTime = THREE.MathUtils.lerp(currentTime, targetTime, 0.075);
+
+    activeAction.enabled = true;
+    activeAction.paused = false;
+    mixer.setTime(currentTime);
+    return;
+  }
+
+  if (!reducedMotion) {
+    const z = 8 - progress * 52;
+    camera.position.set(
+      Math.sin(progress * Math.PI * 1.25) * 1.1,
+      1.72 + Math.sin(progress * Math.PI) * 0.28,
+      z
+    );
+    camera.lookAt(Math.sin(progress * Math.PI * 1.1) * 1.6, 1.55, z - 10);
+  }
+}
+
 const loader = new GLTFLoader();
 
-const glbTimeout = window.setTimeout(() => {
+const loadTimeout = window.setTimeout(() => {
   if (!glbLoaded && statusEl) {
     statusEl.textContent = 'carregamento lento do GLB / fundo alternativo ativo';
-    window.setTimeout(() => statusEl.classList.add('is-hidden'), 1800);
+    window.setTimeout(() => statusEl.classList.add('is-hidden'), 2200);
   }
-}, 6500);
+}, 7000);
 
 loader.load(
   './assets/backrooms.glb',
   (gltf) => {
+    window.clearTimeout(loadTimeout);
     glbLoaded = true;
-    window.clearTimeout(glbTimeout);
 
     const model = gltf.scene;
     normalizeModel(model);
@@ -158,7 +179,7 @@ loader.load(
       camera = exportedCamera;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.near = Math.max(0.01, camera.near || 0.05);
-      camera.far = Math.max(1000, camera.far || 1000);
+      camera.far = Math.max(4000, camera.far || 4000);
       camera.updateProjectionMatrix();
     } else {
       camera.position.set(0, 1.8, 8);
@@ -166,20 +187,34 @@ loader.load(
     }
 
     if (gltf.animations && gltf.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(model);
       const clip = gltf.animations[0];
-      const action = mixer.clipAction(clip);
-      action.play();
-      action.paused = true;
+      mixer = new THREE.AnimationMixer(model);
+      activeAction = mixer.clipAction(clip);
+      activeAction.reset();
+      activeAction.setLoop(THREE.LoopOnce, 1);
+      activeAction.clampWhenFinished = true;
+      activeAction.enabled = true;
+      activeAction.paused = false;
+      activeAction.play();
+
       animationDuration = clip.duration || 1;
+
+      const cameraName = exportedCamera?.name || 'Camera';
+      hasCameraAnimation = clip.tracks.some((track) => {
+        const name = track.name || '';
+        return name.includes(cameraName) || name.includes('Camera');
+      });
+
       mixer.setTime(0);
     }
 
     fallbackGroup.visible = false;
 
     if (statusEl) {
-      statusEl.textContent = 'percurso carregado / role para mover a câmera';
-      window.setTimeout(() => statusEl.classList.add('is-hidden'), 1400);
+      statusEl.textContent = hasCameraAnimation
+        ? 'câmera do GLB conectada ao scroll'
+        : 'GLB carregado / movimento procedural ativo';
+      window.setTimeout(() => statusEl.classList.add('is-hidden'), 1800);
     }
   },
   (event) => {
@@ -187,56 +222,33 @@ loader.load(
 
     if (event.total) {
       const progress = Math.round((event.loaded / event.total) * 100);
-      statusEl.textContent = `carregando percurso interno... ${progress}%`;
+      statusEl.textContent = `carregando Unidade 811... ${progress}%`;
     } else {
-      statusEl.textContent = 'carregando percurso interno...';
+      statusEl.textContent = 'carregando Unidade 811...';
     }
   },
   (error) => {
-    glbLoaded = false;
-    window.clearTimeout(glbTimeout);
-
+    window.clearTimeout(loadTimeout);
     console.error('Falha ao carregar GLB:', error);
 
     fallbackGroup.visible = true;
 
     if (statusEl) {
       statusEl.textContent = 'GLB não carregou / fundo alternativo ativo';
-      window.setTimeout(() => statusEl.classList.add('is-hidden'), 2200);
+      window.setTimeout(() => statusEl.classList.add('is-hidden'), 2400);
     }
   }
 );
 
-function getScrollProgress() {
-  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-  if (maxScroll <= 0) return 0;
-  return Math.min(window.scrollY / maxScroll, 1);
-}
-
-function updateScrollAnimation() {
-  const progress = getScrollProgress();
-
-  if (mixer && !reducedMotion) {
-    targetTime = progress * animationDuration;
-    currentTime = THREE.MathUtils.lerp(currentTime, targetTime, 0.085);
-    mixer.setTime(currentTime);
-    return;
-  }
-
-  if (!reducedMotion) {
-    const z = 8 - progress * 50;
-    camera.position.set(
-      Math.sin(progress * Math.PI * 1.2) * 1.2,
-      1.7 + Math.sin(progress * Math.PI) * 0.35,
-      z
-    );
-    camera.lookAt(Math.sin(progress * Math.PI * 1.1) * 1.8, 1.55, z - 10);
-  }
-}
-
 function animate() {
   requestAnimationFrame(animate);
-  updateScrollAnimation();
+
+  updateCameraFromScroll();
+
+  // Pequeno flicker cinematográfico, lento e seguro.
+  const t = performance.now() * 0.001;
+  fluorescent.intensity = 1.45 + Math.sin(t * 1.7) * 0.08 + Math.sin(t * 5.1) * 0.025;
+
   renderer.render(scene, camera);
 }
 
