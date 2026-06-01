@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js';
 
 /* =========================================================
-   UNIDADE 811 — CINEMATIC THREE BACKGROUND
-   Arquivo completo para substituir three-background.js
+   UNIDADE 811 — REALISTIC THREE BACKGROUND
+   Arquivo completo para substituir three-background.js — versão mais clara e realista
    ========================================================= */
 
 const canvas = document.getElementById('scene');
@@ -13,15 +13,15 @@ const SETTINGS = {
   modelPath: './assets/backrooms.gltf',
 
   renderer: {
-    clearColor: 0x030303,
-    exposure: 0.82,
+    clearColor: 0x14110b,
+    exposure: 1.08,
     pixelRatioDesktop: 1.75,
     pixelRatioMobile: 1.25,
     mobileBreakpoint: 768
   },
 
   camera: {
-    fov: 36,
+    fov: 40,
     near: 0.1,
     far: 4000,
     y: 4.0348629951,
@@ -30,38 +30,38 @@ const SETTINGS = {
   },
 
   atmosphere: {
-    background: 0x030303,
-    fogColor: 0x070604,
-    fogDensity: 0.012
+    background: 0x14110b,
+    fogColor: 0x17120a,
+    fogDensity: 0.0028
   },
 
   lights: {
-    ambientSky: 0xffe8b8,
-    ambientGround: 0x090704,
-    ambientIntensity: 0.42,
+    ambientSky: 0xfff2cf,
+    ambientGround: 0x2a2114,
+    ambientIntensity: 1.08,
 
-    keyColor: 0xffd08a,
-    keyIntensity: 1.65,
-    keyPosition: [120, 95, 42],
+    keyColor: 0xffe4ad,
+    keyIntensity: 1.35,
+    keyPosition: [120, 90, 48],
 
-    fillColor: 0x4a5f72,
-    fillIntensity: 0.24,
-    fillPosition: [-90, 28, -55],
+    fillColor: 0xb8c7d4,
+    fillIntensity: 0.48,
+    fillPosition: [-90, 38, -55],
 
-    backColor: 0xffb15f,
-    backIntensity: 0.58,
-    backPosition: [-40, 50, 120],
+    backColor: 0xffcf8d,
+    backIntensity: 0.28,
+    backPosition: [-40, 52, 120],
 
-    fluorescentColor: 0xffd58a,
-    fluorescentBaseIntensity: 1.18,
-    fluorescentDistance: 72,
+    fluorescentColor: 0xffe5a8,
+    fluorescentBaseIntensity: 1.45,
+    fluorescentDistance: 92,
     fluorescentPosition: [80, 7, -8],
 
-    meshLightColor: 0xffc982,
-    meshLightIntensity: 0.95,
-    meshLightDistance: 42,
-    meshLightYOffset: -0.38,
-    maxMeshLights: 28
+    meshLightColor: 0xffdf9e,
+    meshLightIntensity: 0.62,
+    meshLightDistance: 36,
+    meshLightYOffset: -0.34,
+    maxMeshLights: 20
   },
 
   textures: {
@@ -74,19 +74,19 @@ const SETTINGS = {
 
   fakeAO: {
     enabled: true,
-    strength: 0.72,
-    maxDarken: 0.52,
+    strength: 0.34,
+    maxDarken: 0.24,
     floorDistanceRatio: 0.16,
     ceilingDistanceRatio: 0.1,
     sideDistanceRatio: 0.09,
     minFloorDistance: 0.42,
     minCeilingDistance: 0.28,
     minSideDistance: 0.34,
-    floorWeight: 0.42,
-    ceilingWeight: 0.22,
-    sideWeight: 0.24,
-    cornerWeight: 0.46,
-    cavityWeight: 0.18
+    floorWeight: 0.26,
+    ceilingWeight: 0.12,
+    sideWeight: 0.14,
+    cornerWeight: 0.22,
+    cavityWeight: 0.10
   }
 };
 
@@ -198,56 +198,56 @@ const materialPresets = {
   grid: makeStandardMaterial({
     name: 'web_grid_metal',
     map: textures.metalGrid,
-    color: 0xc9c08a,
-    roughness: 0.28,
-    metalness: 0.72
+    color: 0xd8d1a3,
+    roughness: 0.36,
+    metalness: 0.52
   }),
 
   chao: makeStandardMaterial({
     name: 'web_floor_carpet',
     map: textures.carpet,
-    color: 0xf2ead4,
+    color: 0xffffff,
     roughness: 0.98,
     metalness: 0
   }),
 
   luz: makeStandardMaterial({
     name: 'web_light_emissive',
-    color: 0xffdf9c,
-    roughness: 0.28,
+    color: 0xfff1c7,
+    roughness: 0.32,
     metalness: 0,
-    emissive: 0xffc87a,
-    emissiveIntensity: 3.8
+    emissive: 0xffe0a2,
+    emissiveIntensity: 2.45
   }),
 
   wall: makeStandardMaterial({
     name: 'web_wall_chevron',
     map: textures.wallChevron,
-    color: 0xe8dfb9,
-    roughness: 0.92,
+    color: 0xffffff,
+    roughness: 0.9,
     metalness: 0
   }),
 
   wallDots: makeStandardMaterial({
     name: 'web_wall_dots',
     map: textures.wallDots,
-    color: 0xe8dfb9,
-    roughness: 0.92,
+    color: 0xffffff,
+    roughness: 0.9,
     metalness: 0
   }),
 
   teto: makeStandardMaterial({
     name: 'web_ceiling_texture',
     map: textures.ceiling,
-    color: 0xb6ad7a,
-    roughness: 0.94,
+    color: 0xd6d0a7,
+    roughness: 0.92,
     metalness: 0
   }),
 
   default: makeStandardMaterial({
     name: 'web_default_warm',
-    color: 0xb1a76f,
-    roughness: 0.88,
+    color: 0xcfc49a,
+    roughness: 0.86,
     metalness: 0
   })
 };
@@ -564,9 +564,9 @@ function updateCinematicFlicker() {
 
   dynamicLights.fluorescent.intensity =
     SETTINGS.lights.fluorescentBaseIntensity +
-    Math.sin(t * 1.15) * 0.055 +
-    Math.sin(t * 6.8) * 0.025 +
-    Math.sin(t * 13.4) * 0.01;
+    Math.sin(t * 1.15) * 0.025 +
+    Math.sin(t * 6.8) * 0.012 +
+    Math.sin(t * 13.4) * 0.004;
 }
 
 function animate() {
