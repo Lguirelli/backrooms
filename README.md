@@ -1,18 +1,40 @@
-# Oregon 811 — Backrooms Landing Page
+# Oregon 811 — versão estática com fundo 3D por scroll
 
-Versão estática, sem npm.
+Esta versão roda sem npm.
 
-## Como rodar
+## Como abrir
 
-Abra o arquivo `index.html` no navegador.
+Por causa do carregamento do arquivo `.glb`, o ideal é usar um servidor local simples.
 
-## Arquivos
+### Opção 1
+Abra com a extensão **Live Server** no VS Code.
 
-- `index.html` — estrutura da landing page
-- `styles.css` — estilos responsivos e direção visual
-- `script.js` — interações leves de luz e scroll
-- `assets/planta-implantacao-oregon-811.png` — planta de implantação usada como referência visual
+### Opção 2
+Use Python:
 
-## Observação
+```bash
+python -m http.server 8000
+```
 
-Projeto fictício de portfólio inspirado nos Backrooms, tratado como um empreendimento corporativo impossível.
+Depois abra:
+
+```text
+http://localhost:8000
+```
+
+## Estrutura
+
+- `index.html`
+- `styles.css`
+- `script.js`
+- `three-background.js`
+- `assets/backrooms.glb`
+- `assets/planta-implantacao-oregon-811.png`
+
+## Incluído nesta versão
+
+- landing page responsiva para desktop e celular
+- fundo 3D com movimento de câmera seguindo o scroll
+- planta de implantação baseada na referência enviada
+- sem npm e sem build
+- Three.js carregado via CDN
