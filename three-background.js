@@ -45,7 +45,7 @@ const fillLight = new THREE.DirectionalLight(0xb8ae68, 0.58);
 fillLight.position.set(-80, 35, -40);
 scene.add(fillLight);
 
-const fluorescent = new THREE.PointLight(0xffecaa, 0.82, 64);
+const fluorescent = new THREE.PointLight(0xffecaa, 1.64, 64);
 fluorescent.position.set(80, 7, -8);
 scene.add(fluorescent);
 
