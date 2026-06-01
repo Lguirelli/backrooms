@@ -414,3 +414,139 @@ body {
 .possibility-slide.is-active {
   opacity: 1;
 }
+
+
+/* Patch: hero com imagem real à direita */
+.hero-layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, .78fr);
+  gap: clamp(24px, 4vw, 52px);
+  align-items: stretch;
+}
+
+.hero-visual-card {
+  position: relative;
+  min-height: 420px;
+  align-self: stretch;
+  overflow: hidden;
+  border: 1px solid rgba(247,241,223,.16);
+  border-radius: 24px;
+  background: rgba(5,6,5,.14);
+  box-shadow: 0 24px 80px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter: blur(6px);
+}
+
+.hero-visual-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,.04), rgba(0,0,0,.12) 48%, rgba(0,0,0,.72) 100%),
+    radial-gradient(circle at 35% 18%, rgba(255,255,255,.16), transparent 24%);
+  pointer-events: none;
+}
+
+.hero-visual-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.86) contrast(1.04) brightness(.88);
+}
+
+.hero-visual-caption {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+  color: rgba(247,241,223,.74);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.hero-visual-caption strong {
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: .12em;
+}
+
+/* Patch: deixa o GLB aparecer melhor e preserva materiais */
+#scene {
+  filter: contrast(1.08) saturate(1.08) brightness(.88) !important;
+}
+
+.scene-gradient {
+  background:
+    linear-gradient(to bottom, rgba(3,3,2,.04), rgba(3,3,2,.09) 24%, rgba(3,3,2,.28) 66%, rgba(3,3,2,.76) 100%),
+    radial-gradient(circle at 50% 42%, transparent 0 44%, rgba(0,0,0,.12) 72%, rgba(0,0,0,.52) 100%) !important;
+}
+
+.scene-depth {
+  background:
+    linear-gradient(to right, rgba(0,0,0,.46), transparent 24%, transparent 66%, rgba(0,0,0,.52)),
+    linear-gradient(to bottom, rgba(255,232,150,.035), rgba(0,0,0,.14)) !important;
+}
+
+.scene-vignette {
+  box-shadow: inset 0 0 190px rgba(0,0,0,.56) !important;
+}
+
+.grid-bg::before {
+  opacity: .026 !important;
+}
+
+.hero-card,
+.panel,
+.benefit-card,
+.site-plan-card,
+.proof-grid article,
+.possibility-frame {
+  background: rgba(5,6,5,.045) !important;
+  backdrop-filter: blur(2.5px) !important;
+}
+
+/* Patch: fade automático garantido */
+.possibility-slide {
+  opacity: 0 !important;
+  transition: opacity 1400ms ease-in-out !important;
+  will-change: opacity;
+}
+
+.possibility-slide.is-active {
+  opacity: 1 !important;
+}
+
+@media (max-width: 1140px) {
+  .hero-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-visual-card {
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-visual-card {
+    min-height: 300px;
+    border-radius: 20px;
+  }
+
+  .hero-visual-caption {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  #scene {
+    filter: contrast(1.06) saturate(1.02) brightness(.82) !important;
+  }
+}

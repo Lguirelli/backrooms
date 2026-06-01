@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('mousemove', (event) => {
     if (!hero) return;
+
     const rect = hero.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
@@ -30,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (possibilitySlides.length) {
     let activeIndex = 0;
-    let intervalId;
 
     const updatePossibilitySlide = (index) => {
       possibilitySlides.forEach((slide, slideIndex) => {
@@ -38,11 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const activeSlide = possibilitySlides[index];
+
       if (possibilityCounter) {
         possibilityCounter.textContent = `${String(index + 1).padStart(2, '0')} / ${String(possibilitySlides.length).padStart(2, '0')}`;
       }
-      if (possibilityTitle) possibilityTitle.textContent = activeSlide.dataset.title || '';
-      if (possibilityText) possibilityText.textContent = activeSlide.dataset.desc || '';
+
+      if (possibilityTitle) {
+        possibilityTitle.textContent = activeSlide.dataset.title || '';
+      }
+
+      if (possibilityText) {
+        possibilityText.textContent = activeSlide.dataset.desc || '';
+      }
     };
 
     const nextSlide = () => {
@@ -51,18 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     updatePossibilitySlide(activeIndex);
-    intervalId = window.setInterval(nextSlide, prefersReducedMotion ? 6500 : 3200);
 
-    // No mobile não existe hover, então o fade continua automático.
-    possibilityFrame.addEventListener('mouseenter', () => {
-      if (!intervalId) return;
-      window.clearInterval(intervalId);
-      intervalId = null;
-    });
-
-    possibilityFrame.addEventListener('mouseleave', () => {
-      if (intervalId) return;
-      intervalId = window.setInterval(nextSlide, prefersReducedMotion ? 6500 : 3200);
-    });
+    // Automático sempre. Não pausa no hover para evitar falha em desktop/mobile.
+    window.setInterval(nextSlide, prefersReducedMotion ? 6200 : 3200);
   }
 });
