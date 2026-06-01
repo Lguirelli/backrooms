@@ -1,40 +1,51 @@
-# Oregon 811 — versão estática com fundo 3D por scroll
+# Oregon 811 — landing page estática com GLB corrigido
 
-Esta versão roda sem npm.
+Versão sem npm, com HTML, CSS e JavaScript puro.
 
-## Como abrir
+## Como publicar no GitHub Pages
 
-Por causa do carregamento do arquivo `.glb`, o ideal é usar um servidor local simples.
+Suba o conteúdo desta pasta na raiz do repositório:
 
-### Opção 1
-Abra com a extensão **Live Server** no VS Code.
+```txt
+/
+├─ index.html
+├─ styles.css
+├─ script.js
+├─ three-background.js
+├─ README.md
+└─ assets/
+   ├─ backrooms.glb
+   └─ planta-implantacao-oregon-811.png
+```
 
-### Opção 2
-Use Python:
+Depois ative:
+
+```txt
+Settings → Pages → Deploy from branch → main → /root
+```
+
+## Como testar localmente
+
+O GLB e o Three.js usam módulo ES. Evite abrir direto com `file://`.
+
+Use:
 
 ```bash
 python -m http.server 8000
 ```
 
-Depois abra:
+Depois acesse:
 
-```text
+```txt
 http://localhost:8000
 ```
 
-## Estrutura
+## Correções desta versão
 
-- `index.html`
-- `styles.css`
-- `script.js`
-- `three-background.js`
-- `assets/backrooms.glb`
-- `assets/planta-implantacao-oregon-811.png`
+- GLB no fundo com z-index e renderização corrigidos.
+- Fallback 3D automático caso o arquivo GLB falhe.
+- Estética alinhada ao storytelling: imóvel corporativo real, raro e funcional, com estranhamento sutil.
+- Textos revisados com foco em ocupação, continuidade, permanência, rota indicada e escala incomum.
+- Responsivo para celular.
 
-## Incluído nesta versão
-
-- landing page responsiva para desktop e celular
-- fundo 3D com movimento de câmera seguindo o scroll
-- planta de implantação baseada na referência enviada
-- sem npm e sem build
-- Three.js carregado via CDN
+- nova seção "Possibilidades" com fade entre imagens reais de ocupação

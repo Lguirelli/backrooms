@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Oregon 811 — campus interno para operações sem ruído externo." />
-  <title>Oregon 811 | Corporate Continuum</title>
+  <meta name="description" content="Oregon 811 — espaço corporativo fora do eixo comum." />
+  <title>Oregon 811 | Espaço Corporativo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,15 +13,14 @@
 <body>
   <div class="scene-wrap" aria-hidden="true">
     <canvas id="scene"></canvas>
+    <div class="scene-depth"></div>
     <div class="scene-gradient"></div>
     <div class="scene-vignette"></div>
-    <div class="scene-status mono" id="sceneStatus">carregando percurso do Oregon 811...</div>
+    <div class="scene-status mono" id="sceneStatus">carregando percurso interno...</div>
   </div>
 
   <div class="noise"></div>
   <div class="scanlines"></div>
-  <div class="ambient ambient-a"></div>
-  <div class="ambient ambient-b"></div>
   <div class="grid-bg"></div>
 
   <main class="site-shell">
@@ -29,118 +28,105 @@
       <div class="topbar-inner max-wrap mono">
         <div class="brand-mark">
           <span class="round-icon">↗</span>
-          <span>Oregon 811 Corporate Continuum</span>
+          <span>Oregon 811</span>
         </div>
-        <span class="topbar-note">internal campus / controlled occupancy</span>
+        <span class="topbar-note">estrutura interna / ocupação progressiva</span>
       </div>
     </section>
 
     <section class="section-pad hero-wrap">
-      <div class="hero-card" id="heroCard">
+      <div class="hero-card translucent-card" id="heroCard">
         <header class="hero-nav mono">
-          <div class="nav-logo">
-            <span class="building-icon">▥</span>
-            Oregon 811
-          </div>
+          <div class="nav-logo"><span class="building-icon">▥</span> Oregon 811</div>
           <nav>
-            <a href="#concept">O espaço</a>
-            <a href="#services">Diferenciais</a>
+            <a href="#positioning">O espaço</a>
+            <a href="#benefits">Benefícios</a>
+            <a href="#atmosphere">Atmosfera</a>
             <a href="#plan">Planta</a>
-            <a href="#access">Visita</a>
+            <a href="#possibilities">Possibilidades</a>
+            <a href="#visit">Visita</a>
           </nav>
         </header>
 
         <div class="hero-content">
           <div class="hero-main">
+            <p class="eyebrow mono">Corporate continuum / Rua Oregon</p>
             <h1 class="display hero-title">OREGON<br>811</h1>
             <div class="hero-copy-grid">
-              <p class="hero-kicker">Campus interno<br>para operações<br>sem ruído externo</p>
-              <p class="hero-lead">Metragem contínua, iluminação estável e disponibilidade imediata para equipes que exigem concentração prolongada, discrição e permanência.</p>
+              <p class="hero-kicker">Um espaço corporativo fora do eixo comum.</p>
+              <div class="hero-lead-group">
+                <p class="hero-lead">Ambientes amplos, circulação contínua e uma estrutura interna projetada para empresas que precisam crescer sem limites aparentes.</p>
+                <p class="hero-note">Alguns visitantes relatam a sensação de que o espaço continua além do previsto em projeto.</p>
+              </div>
             </div>
           </div>
 
           <div class="hero-bottom">
             <div class="hero-tags mono">
-              <span>Controle lumínico total</span>
-              <span>Baixa interferência humana</span>
-              <span>Acesso mediante confirmação</span>
+              <span>circulação contínua</span>
+              <span>iluminação permanente</span>
+              <span>planta adaptável</span>
             </div>
             <div class="hero-actions">
-              <a href="#access" class="btn btn-primary">Solicitar visita <span>↗</span></a>
-              <a href="#plan" class="btn btn-ghost">Receber planta</a>
+              <a href="#visit" class="btn btn-primary">Solicitar apresentação <span>↗</span></a>
+              <a href="#plan" class="btn btn-ghost">Conhecer a planta</a>
             </div>
           </div>
         </div>
-        <div class="corridor-floor"></div>
         <span class="vline vline-1"></span>
         <span class="vline vline-2"></span>
         <span class="vline vline-3"></span>
       </div>
     </section>
 
-    <section id="concept" class="section-pad spaced">
+    <section id="positioning" class="section-pad spaced">
       <div class="panel max-wrap concept-panel">
         <div class="section-heading two-col">
           <div>
-            <p class="eyebrow mono">Sobre o espaço</p>
-            <h2>Foco não é estado de espírito. É infraestrutura.</h2>
+            <p class="eyebrow mono">Posicionamento</p>
+            <h2>Projetado para quem precisa de mais espaço do que o mercado costuma oferecer.</h2>
           </div>
-          <p>Nem todo ambiente precisa disputar atenção para provar valor. O Oregon 811 foi concebido para operações que se beneficiam de continuidade, silêncio estrutural e uma relação mais controlada com o tempo.</p>
+          <div class="section-copy">
+            <p>Enquanto edifícios tradicionais limitam operação, circulação e expansão, este projeto oferece uma estrutura incomum: ambientes que se conectam de forma fluida, com baixa interferência visual e alto potencial de ocupação.</p>
+            <p>É uma solução para empresas, centros de distribuição, equipes operacionais, arquivos, call centers, laboratórios criativos e negócios que precisam de continuidade.</p>
+          </div>
         </div>
-        <div class="principles-grid">
-          <article>
-            <span class="mono index">01</span>
-            <h3>Menos exterior</h3>
-            <p>A ausência de vista reduz interferências visuais urbanas e preserva a atenção onde ela realmente produz resultado.</p>
-          </article>
-          <article>
-            <span class="mono index">02</span>
-            <h3>Mais concentração</h3>
-            <p>A repetição material reduz atrito visual. A profundidade protege. A constância organiza.</p>
-          </article>
-          <article>
-            <span class="mono index">03</span>
-            <h3>Permanência como estratégia</h3>
-            <p>O espaço não foi pensado para impressionar na chegada. Ele melhora quando a operação encontra ritmo.</p>
-          </article>
+        <div class="narrative-strip">
+          <p>A arquitetura evita rupturas bruscas. Um corredor leva a outro. Uma sala se abre para a próxima. A circulação parece natural, mesmo quando a distância percorrida não corresponde exatamente à metragem informada.</p>
         </div>
       </div>
     </section>
 
-    <section id="services" class="section-pad spaced-small">
-      <div class="service-board max-wrap">
-        <article class="service-card">
-          <div class="mini-room"></div>
-          <div class="service-content">
-            <div class="service-top"><span class="mono">01</span><i>⌁</i></div>
-            <h3>Controle lumínico total</h3>
-            <p>Estabilidade visual em qualquer horário, sem interferência climática, sem janelas e sem variações externas competindo pela atenção.</p>
-          </div>
-        </article>
-        <article class="service-card">
-          <div class="mini-room"></div>
-          <div class="service-content">
-            <div class="service-top"><span class="mono">02</span><i>▦</i></div>
-            <h3>Expansão modular progressiva</h3>
-            <p>A ocupação começa pequena e cresce sem ruptura perceptível, mantendo coesão material, repetição espacial e continuidade operacional.</p>
-          </div>
-        </article>
-        <article class="service-card">
-          <div class="mini-room"></div>
-          <div class="service-content">
-            <div class="service-top"><span class="mono">03</span><i>◌</i></div>
-            <h3>Privacidade por afastamento humano</h3>
-            <p>Sem fluxo casual, sem vitrines de equipe e sem exposição involuntária da rotina de trabalho.</p>
-          </div>
-        </article>
-        <article class="service-card">
-          <div class="mini-room"></div>
-          <div class="service-content">
-            <div class="service-top"><span class="mono">04</span><i>↳</i></div>
-            <h3>Visita de reconhecimento</h3>
-            <p>Acesso acompanhado, percurso assimilável e confirmação de retorno para clientes que precisam entender antes de permanecer.</p>
-          </div>
-        </article>
+    <section id="benefits" class="section-pad spaced-small">
+      <div class="max-wrap">
+        <div class="section-heading two-col experience-heading">
+          <h2>Tudo o que sua operação precisa para continuar avançando.</h2>
+          <p>Os diferenciais foram organizados como atributos comerciais reais. O estranhamento permanece nas entrelinhas, não na promessa principal.</p>
+        </div>
+
+        <div class="benefit-grid">
+          <article class="benefit-card"><span class="mono">01</span><h3>Circulação contínua</h3><p>Corredores largos e sequenciais permitem fluxo constante entre setores, sem interrupções ou gargalos evidentes.</p></article>
+          <article class="benefit-card"><span class="mono">02</span><h3>Planta de alta expansão</h3><p>A distribuição interna favorece crescimento por módulos, com espaços que podem ser ocupados conforme a demanda aumenta.</p></article>
+          <article class="benefit-card"><span class="mono">03</span><h3>Iluminação permanente</h3><p>Sistema fluorescente distribuído para manter visibilidade estável em todos os períodos de uso.</p></article>
+          <article class="benefit-card"><span class="mono">04</span><h3>Privacidade operacional</h3><p>A ausência de fachadas externas e vitrines reduz distrações, exposição e interferência do ambiente urbano.</p></article>
+          <article class="benefit-card"><span class="mono">05</span><h3>Baixo ruído externo</h3><p>O isolamento natural da estrutura cria um ambiente concentrado, distante da movimentação convencional da cidade.</p></article>
+          <article class="benefit-card"><span class="mono">06</span><h3>Presença mínima de janelas</h3><p>Mais controle térmico, menos variação de luz e maior previsibilidade para operações internas.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="atmosphere" class="section-pad spaced-small">
+      <div class="panel max-wrap atmosphere-panel">
+        <div>
+          <p class="eyebrow mono">Atmosfera</p>
+          <h2>Um ambiente silencioso, neutro e altamente funcional.</h2>
+        </div>
+        <div class="atmosphere-copy">
+          <p>O acabamento segue uma estética corporativa familiar: carpete em tons quentes, paredes claras, iluminação fria e divisões modulares.</p>
+          <p>Nada disputa atenção com sua operação.</p>
+          <p>O espaço foi pensado para funcionar como uma extensão contínua do trabalho. Sem excesso de elementos decorativos. Sem interferência urbana. Sem distrações externas.</p>
+          <p class="soft-warning">A sensação é de permanência. Como se o ambiente tivesse sido criado para continuar funcionando, mesmo depois que todos saem.</p>
+        </div>
       </div>
     </section>
 
@@ -148,8 +134,9 @@
       <div class="panel plan-panel max-wrap plan-panel-real">
         <div class="plan-copy">
           <p class="eyebrow mono">Planta de implantação</p>
-          <h2>A origem agora tem<br>endereço técnico</h2>
-          <p>A seção de planta passa a assumir a lógica documental do projeto: um ativo na Rua Oregon, com leitura de implantação, estacionamento, acessos, saída de veículos e os blocos 811, 807 e 801 como referências formais do empreendimento impossível.</p>
+          <h2>Uma planta que acompanha o crescimento da sua empresa.</h2>
+          <p>A organização do empreendimento permite múltiplas configurações: recepção interna, áreas administrativas, salas de reunião, setores técnicos, armazenamento, operação, descanso e circulação.</p>
+          <p>A planta pode ser interpretada por blocos, facilitando a adaptação para diferentes tipos de uso. Alguns módulos apresentam continuidade espacial acima da média.</p>
           <div class="plan-list">
             <div><span>Endereço narrativo</span><b class="mono">Rua Oregon</b></div>
             <div><span>Bloco principal</span><b class="mono">807 “Leste”</b></div>
@@ -158,13 +145,12 @@
             <div><span>Acesso assistido</span><b class="mono">PNE / emergência</b></div>
             <div><span>Escala de referência</span><b class="mono">1:100</b></div>
           </div>
+          <a href="#possibilities" class="btn btn-primary inline-btn">Ver possibilidades de ocupação</a>
         </div>
 
         <div class="site-plan-card">
           <div class="site-plan-toolbar mono">
-            <span>FOLHA A-1</span>
-            <span>PLANTA DE IMPLANTAÇÃO</span>
-            <span>MAIO / 2024</span>
+            <span>FOLHA A-1</span><span>PLANTA DE IMPLANTAÇÃO</span><span>MAIO / 2024</span>
           </div>
           <figure class="site-plan-frame">
             <img src="./assets/planta-implantacao-oregon-811.png" alt="Planta de implantação do Oregon 811 com estacionamento, salas, saída de veículos e Rua Oregon" loading="lazy">
@@ -179,60 +165,82 @@
       </div>
     </section>
 
-    <section class="section-pad spaced-small">
-      <div class="max-wrap">
-        <div class="section-heading two-col experience-heading">
-          <h2>Experiência<br>de ocupação</h2>
-          <p>Há espaços que impressionam na chegada e se esgotam em minutos. O Oregon 811 funciona ao contrário.</p>
+    <section id="possibilities" class="section-pad spaced-small">
+      <div class="panel max-wrap possibilities-panel">
+        <div class="possibilities-copy">
+          <p class="eyebrow mono">Possibilidades</p>
+          <h2>O mesmo espaço<br>assume novas funções.</h2>
+          <p>Ao longo do reconhecimento, o Oregon 811 revela algo raro: a mesma base espacial aceita múltiplas leituras de uso sem perder coerência. Onde antes havia vazio, surgem recepção, treinamento, arquivo, operações, vendas, área demonstrativa e permanência.</p>
+          <p>Não se trata de cenários desconectados. Trata-se de uma estrutura capaz de absorver a função exigida em cada fase da operação, mantendo a mesma continuidade material, a mesma lógica de circulação e a mesma sensação de expansão.</p>
+          <div class="possibility-tags mono">
+            <span>recepção</span>
+            <span>treinamento</span>
+            <span>arquivo</span>
+            <span>operações</span>
+            <span>administrativo</span>
+            <span>vendas</span>
+            <span>demonstração</span>
+            <span>lounge</span>
+          </div>
         </div>
-        <div class="levels-grid">
-          <article>
-            <div class="liminal-wall"></div>
-            <div class="level-content">
-              <span class="mono">01</span>
-              <h3>Threshold Suite</h3>
-              <p>Para células compactas, lideranças, pesquisa, escrita, estratégia e trabalho profundo.</p>
+
+        <div class="possibilities-showcase">
+          <div class="possibility-frame" id="possibilityFrame">
+            <img class="possibility-slide is-active" src="./assets/possibility-01-empty-shell.jpg" alt="Espaço base vazio do Oregon 811" data-title="Base espacial contínua" data-desc="A estrutura original parte do vazio: circulação aberta, leitura simples e alto potencial de adaptação." loading="lazy">
+            <img class="possibility-slide" src="./assets/possibility-02-training.png" alt="Sala de treinamento montada" data-title="Treinamento e alinhamento" data-desc="Ambientes amplos se convertem em salas de treinamento, onboarding e encontros de equipe sem perder fluidez." loading="lazy">
+            <img class="possibility-slide" src="./assets/possibility-03-archive-operations.png" alt="Arquivo e setor de operações" data-title="Arquivo e retaguarda operacional" data-desc="Setores de armazenamento, documentação e suporte podem ser integrados à rotina operacional com facilidade." loading="lazy">
+            <img class="possibility-slide" src="./assets/possibility-04-reception.png" alt="Recepção corporativa" data-title="Recepção e primeiro contato" data-desc="A mesma lógica espacial comporta recepção, espera, triagem e orientação sem quebrar a continuidade do percurso." loading="lazy">
+            <img class="possibility-slide" src="./assets/possibility-05-office-floor.png" alt="Área administrativa com mesas" data-title="Operação administrativa" data-desc="Estações de trabalho, gestão interna e times administrativos podem ocupar a planta de forma progressiva." loading="lazy">
+            <img class="possibility-slide" src="./assets/possibility-06-demo-space.png" alt="Espaço demonstrativo montado" data-title="Espaço demonstrativo" data-desc="A planta também suporta vitrines internas, exposição controlada de produtos e experiências de apresentação." loading="lazy">
+            <img class="possibility-slide" src="./assets/possibility-07-sales-center.png" alt="Central de vendas no espaço" data-title="Central de vendas" data-desc="Pontos de atendimento, consultoria comercial e apresentação de plantas encontram lugar natural dentro da estrutura." loading="lazy">
+            <img class="possibility-slide" src="./assets/possibility-08-lounge.png" alt="Lounge e área de permanência" data-title="Permanência e apoio" data-desc="Áreas de espera, descanso e apoio reforçam a ideia de um espaço preparado para permanência prolongada." loading="lazy">
+
+            <div class="possibility-overlay">
+              <span class="mono possibility-counter" id="possibilityCounter">01 / 08</span>
+              <div class="possibility-caption">
+                <strong id="possibilityTitle">Base espacial contínua</strong>
+                <p id="possibilityText">A estrutura original parte do vazio: circulação aberta, leitura simples e alto potencial de adaptação.</p>
+              </div>
             </div>
-          </article>
-          <article>
-            <div class="liminal-wall"></div>
-            <div class="level-content">
-              <span class="mono">02</span>
-              <h3>Continuum Cluster</h3>
-              <p>Para times que operam por blocos, demandam adjacência entre setores e valorizam expansão sem espetáculo.</p>
-            </div>
-          </article>
-          <article>
-            <div class="liminal-wall"></div>
-            <div class="level-content">
-              <span class="mono">03</span>
-              <h3>Permanent Occupancy</h3>
-              <p>Para permanência estendida, protocolos reservados e continuidade operacional acima da média.</p>
-            </div>
-          </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="visit" class="section-pad spaced-small">
+      <div class="max-wrap visit-grid">
+        <div class="panel visit-panel">
+          <p class="eyebrow mono">Visita técnica</p>
+          <h2>A visita técnica é a melhor forma de entender o potencial do espaço.</h2>
+          <p>Algumas características só ficam claras presencialmente: a profundidade dos corredores, a repetição precisa dos ambientes, a estabilidade da iluminação e a sensação de que cada setor pode levar a uma nova possibilidade de uso.</p>
+          <p>Durante a visita, nossa equipe acompanha o percurso recomendado e apresenta as áreas disponíveis para ocupação imediata.</p>
+          <p class="soft-warning">Por segurança, recomendamos permanecer dentro da rota indicada.</p>
+        </div>
+
+        <div class="panel commercial-panel">
+          <p class="eyebrow mono">Indicação comercial</p>
+          <h3>Ideal para operações que não cabem mais em espaços convencionais.</h3>
+          <ul>
+            <li>mais área útil</li><li>mais privacidade</li><li>mais controle interno</li><li>mais silêncio</li><li>mais continuidade</li><li>mais margem para crescer</li>
+          </ul>
+          <p>Não é um endereço para qualquer negócio. É um espaço para operações que precisam sair da lógica comum de sala, rua, fachada e vitrine.</p>
         </div>
       </div>
     </section>
 
     <section class="section-pad spaced-small">
       <div class="panel max-wrap testimonials-panel">
-        <div class="section-heading">
-          <p class="eyebrow mono">Depoimentos</p>
-          <h2>Constância percebida<br>por quem permaneceu</h2>
+        <div class="section-heading two-col">
+          <div>
+            <p class="eyebrow mono">Prova / conceito</p>
+            <h2>O espaço já foi analisado por visitantes, investidores e equipes técnicas.</h2>
+          </div>
+          <p>A maioria destaca três pontos: a sensação de escala, a continuidade dos ambientes e a dificuldade em estimar onde exatamente o prédio termina.</p>
         </div>
-        <div class="testimonials-grid">
-          <figure>
-            <blockquote>“Fechamos um trimestre inteiro aqui. Só percebemos quando tivemos de sair.”</blockquote>
-            <figcaption class="mono">— Diretora de Operações</figcaption>
-          </figure>
-          <figure>
-            <blockquote>“Existe uma serenidade rara em ambientes que não tentam ser inspiradores o tempo todo.”</blockquote>
-            <figcaption class="mono">— Sócio, consultoria financeira</figcaption>
-          </figure>
-          <figure>
-            <blockquote>“Eu vim pela metragem. Fiquei pela constância.”</blockquote>
-            <figcaption class="mono">— Head de Estratégia</figcaption>
-          </figure>
+        <div class="proof-grid">
+          <article><span class="mono">01</span><h3>Sensação de escala</h3><p>Para alguns, isso representa estranhamento. Para empresas com visão de expansão, representa oportunidade.</p></article>
+          <article><span class="mono">02</span><h3>Continuidade dos ambientes</h3><p>O percurso parece manter a mesma linguagem mesmo quando os módulos mudam de função.</p></article>
+          <article><span class="mono">03</span><h3>Limites pouco claros</h3><p>A leitura convencional da planta não encerra completamente a experiência de ocupação.</p></article>
         </div>
       </div>
     </section>
@@ -240,35 +248,26 @@
     <section id="access" class="section-pad access-section">
       <div class="access-grid max-wrap">
         <div class="panel cta-panel">
-          <p class="eyebrow mono">CTA final</p>
-          <h2>O próximo passo<br>não é imaginar.<br>É atravessar.</h2>
-          <p>Se a sua operação exige menos distração, menos ruído e mais permanência, solicite uma visita de reconhecimento e receba uma proposta de ocupação compatível com o seu nível de continuidade.</p>
+          <p class="eyebrow mono">Apresentação comercial</p>
+          <h2>Sua próxima operação pode começar onde os limites deixam de ser claros.</h2>
+          <p>Conheça um espaço corporativo raro, com alta capacidade de adaptação e uma experiência interna difícil de comparar com qualquer outro imóvel disponível no mercado.</p>
+          <p>Solicite a apresentação comercial e descubra se este endereço faz sentido para a próxima fase da sua empresa.</p>
           <div class="cta-actions">
-            <a href="mailto:access@oregon811.fake" class="btn btn-primary">Agendar reconhecimento presencial</a>
-            <a href="#plan" class="btn btn-ghost">Receber planta de ocupação</a>
+            <a href="mailto:access@oregon811.fake" class="btn btn-primary">Solicitar apresentação comercial</a>
+            <a href="#plan" class="btn btn-ghost">Ver planta do empreendimento</a>
           </div>
         </div>
+
         <div class="faq-list">
-          <article class="panel faq-card">
-            <span>⌖</span>
-            <div><h3>Existe luz natural?</h3><p>Trabalhamos com estabilidade lumínica e menor interferência externa.</p></div>
-          </article>
-          <article class="panel faq-card">
-            <span>◫</span>
-            <div><h3>A metragem é fixa?</h3><p>Ela é definida pelo programa de uso e pelas necessidades de progressão da ocupação.</p></div>
-          </article>
-          <article class="panel faq-card">
-            <span>↘</span>
-            <div><h3>É possível visitar?</h3><p>Sim. Recomendamos visita acompanhada de reconhecimento.</p></div>
-          </article>
-          <article class="panel faq-card">
-            <span>▧</span>
-            <div><h3>A planta é simples?</h3><p>Ela é eficiente após o primeiro reconhecimento.</p></div>
-          </article>
+          <article class="panel faq-card"><span>⌖</span><div><h3>Espaço contínuo</h3><p>Ambientes conectados para operações que precisam crescer sem interrupção.</p></div></article>
+          <article class="panel faq-card"><span>◫</span><div><h3>Baixa interferência externa</h3><p>Sem ruído urbano, sem vitrines e sem distrações visuais.</p></div></article>
+          <article class="panel faq-card"><span>↘</span><div><h3>Planta adaptável</h3><p>Configuração flexível para diferentes modelos de ocupação.</p></div></article>
+          <article class="panel faq-card"><span>▧</span><div><h3>Escala incomum</h3><p>Áreas internas que parecem se expandir além da leitura convencional da planta.</p></div></article>
         </div>
       </div>
+
       <footer class="footer max-wrap mono">
-        Oregon 811 Corporate Continuum. Visitas mediante agendamento. Disponibilidade sujeita à configuração operacional vigente. Percursos, módulos e acessos podem variar sem aviso prévio.
+        Oregon 811 Corporate Continuum. Visitas mediante agendamento. Disponibilidade sujeita à configuração operacional vigente. Percursos, módulos e acessos podem variar conforme status operacional.
       </footer>
     </section>
   </main>
