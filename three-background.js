@@ -15,7 +15,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.94;
+renderer.toneMappingExposure = 0.98;
 renderer.setClearColor(0x050505, 1);
 
 const scene = new THREE.Scene();
@@ -54,6 +54,10 @@ function loadTexture(url, repeatX = 1, repeatY = 1) {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(repeatX, repeatY);
+  texture.flipY = false;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
   texture.needsUpdate = true;
   return texture;
@@ -63,7 +67,6 @@ const materialTextures = {
   carpet: loadTexture('./assets/carpet.jpg', 9, 9),
   wallDot: loadTexture('./assets/wall.png', 5, 5),
   wallChevron: loadTexture('./assets/wall2.png', 7, 7),
-  metallicGrid: loadTexture('./assets/wall.png', 4, 4),
   ceiling: loadTexture('./assets/ceiling-texture.png', 6, 6)
 };
 
@@ -80,68 +83,150 @@ function getScrollProgress() {
   return Math.min(Math.max(window.scrollY / maxScroll, 0), 1);
 }
 
+function ensureStandardMaterial(material) {
+  if (!material) return material;
+
+  if (material.isMeshStandardMaterial) {
+    return material;
+  }
+
+  const upgraded = new THREE.MeshStandardMaterial();
+  upgraded.name = material.name || 'patched-standard-material';
+  upgraded.color.copy(material.color || new THREE.Color(0xffffff));
+  upgraded.transparent = !!material.transparent;
+  upgraded.opacity = typeof material.opacity === 'number' ? material.opacity : 1;
+  upgraded.side = THREE.DoubleSide;
+  upgraded.map = material.map || null;
+  upgraded.emissive = material.emissive ? material.emissive.clone() : new THREE.Color(0x000000);
+  upgraded.emissiveIntensity = material.emissiveIntensity || 1;
+  upgraded.roughness = typeof material.roughness === 'number' ? material.roughness : 0.8;
+  upgraded.metalness = typeof material.metalness === 'number' ? material.metalness : 0;
+  upgraded.needsUpdate = true;
+  return upgraded;
+}
+
+function makeCarpet(material) {
+  material.map = materialTextures.carpet;
+  material.color.set(0xffffff);
+  material.roughness = 0.95;
+  material.metalness = 0.0;
+  material.emissive.set(0x000000);
+  material.emissiveIntensity = 1;
+}
+
+function makeWall(material, variant = 'dot') {
+  material.map = variant === 'chevron' ? materialTextures.wallChevron : materialTextures.wallDot;
+  material.color.set(0xffffff);
+  material.roughness = 0.90;
+  material.metalness = 0.0;
+  material.emissive.set(0x000000);
+  material.emissiveIntensity = 1;
+}
+
+function makeCeiling(material) {
+  material.map = materialTextures.ceiling;
+  material.color.set(0xd0d0a0);
+  material.roughness = 0.84;
+  material.metalness = 0.08;
+  material.emissive.set(0x000000);
+  material.emissiveIntensity = 1;
+}
+
+function makeMetal(material) {
+  material.map = materialTextures.ceiling;
+  material.color.set(0xb7b091);
+  material.roughness = 0.34;
+  material.metalness = 0.92;
+  material.emissive.set(0x000000);
+  material.emissiveIntensity = 1;
+}
+
+function makeLight(material) {
+  material.map = null;
+  material.color.set(0xfff6d4);
+  material.roughness = 0.28;
+  material.metalness = 0.0;
+  material.emissive.set(0xffefb0);
+  material.emissiveIntensity = 2.25;
+}
+
+function classifyMaterial(materialName, objectName) {
+  const name = `${materialName || ''} ${objectName || ''}`.toLowerCase();
+
+  if (name.includes('carpet') || name.includes('chao') || name.includes('floor') || name.includes('piso')) {
+    return 'carpet';
+  }
+
+  if (name.includes('emmisive') || name.includes('emissive') || name.includes('light') || name.includes('luz') || name.includes('lamp')) {
+    return 'light';
+  }
+
+  if (name.includes('wall')) {
+    if (name.includes('wall.001') || name.includes('wall.004') || name.includes('wall.009') || name.includes('wall.015')) {
+      return 'wall-chevron';
+    }
+    return 'wall-dot';
+  }
+
+  if (name.includes('grid') || name.includes('grade') || name.includes('metal') || name.includes('frame') || name.includes('grelha')) {
+    return 'metal';
+  }
+
+  if (name.includes('teto') || name.includes('ceiling')) {
+    return 'ceiling';
+  }
+
+  if (name.includes('material.')) {
+    return 'metal';
+  }
+
+  return 'ceiling';
+}
+
+function patchMaterial(material, objectName = '') {
+  const patched = ensureStandardMaterial(material);
+  patched.side = THREE.DoubleSide;
+
+  const classification = classifyMaterial(patched.name || material?.name || '', objectName);
+
+  if (classification === 'carpet') {
+    makeCarpet(patched);
+  } else if (classification === 'wall-dot') {
+    makeWall(patched, 'dot');
+  } else if (classification === 'wall-chevron') {
+    makeWall(patched, 'chevron');
+  } else if (classification === 'metal') {
+    makeMetal(patched);
+  } else if (classification === 'light') {
+    makeLight(patched);
+  } else {
+    makeCeiling(patched);
+  }
+
+  if (patched.map) {
+    patched.map.colorSpace = THREE.SRGBColorSpace;
+    patched.map.flipY = false;
+    patched.map.needsUpdate = true;
+  }
+
+  patched.needsUpdate = true;
+  return patched;
+}
+
 function applyMaterials(root) {
   root.traverse((object) => {
     if (!object.isMesh) return;
 
     object.frustumCulled = false;
+    object.castShadow = false;
+    object.receiveShadow = true;
 
-    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    if (Array.isArray(object.material)) {
+      object.material = object.material.map((material) => patchMaterial(material, object.name));
+      return;
+    }
 
-    materials.filter(Boolean).forEach((material) => {
-      const name = `${material.name || ''} ${object.name || ''}`.toLowerCase();
-
-      material.side = THREE.DoubleSide;
-
-      if (material.map) {
-        material.map.colorSpace = THREE.SRGBColorSpace;
-        material.map.needsUpdate = true;
-      }
-
-      if (name.includes('chao') || name.includes('floor') || name.includes('carpet') || name.includes('piso')) {
-        material.map = materialTextures.carpet;
-        material.color.set(0xffffff);
-        material.roughness = 0.94;
-        material.metalness = 0;
-      }
-
-      if (name.includes('wall.001') || name.includes('wall') || name.includes('parede')) {
-        material.map = materialTextures.wallChevron;
-        material.color.set(0xffffff);
-        material.roughness = 0.9;
-        material.metalness = 0;
-      }
-
-      if (name.includes('grid') || name.includes('metal') || name.includes('frame')) {
-        material.map = materialTextures.metallicGrid;
-        material.color.set(0xd8d2a4);
-        material.roughness = 0.26;
-        material.metalness = 0.88;
-      }
-
-      if (name.includes('luz') || name.includes('light') || name.includes('lamp')) {
-        material.map = null;
-        material.color.set(0xfff4c4);
-        material.emissive = new THREE.Color(0xfff1b8);
-        material.emissiveIntensity = 1.55;
-        material.roughness = 0.35;
-        material.metalness = 0;
-      }
-
-      if (
-        (name.includes('teto') || name.includes('ceiling')) &&
-        !name.includes('luz') &&
-        !name.includes('light') &&
-        !name.includes('lamp')
-      ) {
-        material.map = materialTextures.ceiling;
-        material.color.set(0xCFCF9F);
-        material.roughness = 0.9;
-        material.metalness = 0;
-      }
-
-      material.needsUpdate = true;
-    });
+    object.material = patchMaterial(object.material, object.name);
   });
 }
 
@@ -212,73 +297,73 @@ function setAnimationTimeFromScroll() {
 }
 
 const loader = new GLTFLoader();
+const candidateModels = ['./assets/backrooms.glb', './assets/backrooms.gltf'];
 
 const timeout = window.setTimeout(() => {
   if (!modelLoaded) setStatus('carregamento lento do modelo 3D', 2600);
 }, 8000);
 
-loader.load(
-  './assets/backrooms.gltf',
-  (gltf) => {
-    window.clearTimeout(timeout);
-    modelLoaded = true;
+function loadModelAt(index = 0) {
+  const url = candidateModels[index];
 
-    applyMaterials(gltf.scene);
-    scene.add(gltf.scene);
+  loader.load(
+    url,
+    (gltf) => {
+      window.clearTimeout(timeout);
+      modelLoaded = true;
 
-    const exportedCamera = gltf.cameras?.[0];
+      applyMaterials(gltf.scene);
+      scene.add(gltf.scene);
 
-    if (exportedCamera && exportedCamera.isCamera) {
-      camera = exportedCamera;
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.near = Math.max(0.01, camera.near || 0.05);
-      camera.far = Math.max(4000, camera.far || 1000);
-      camera.updateProjectionMatrix();
+      const exportedCamera = gltf.cameras?.[0];
+
+      if (exportedCamera && exportedCamera.isCamera) {
+        camera = exportedCamera;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.near = Math.max(0.01, camera.near || 0.05);
+        camera.far = Math.max(4000, camera.far || 1000);
+        camera.updateProjectionMatrix();
+      }
+
+      bindScrollAnimation(gltf, exportedCamera);
+      setAnimationTimeFromScroll();
+
+      setStatus(hasCameraAnimation ? 'câmera do modelo conectada ao scroll' : 'modelo carregado / fallback de câmera ativo');
+    },
+    (event) => {
+      if (!statusEl) return;
+      if (event.total) {
+        const progress = Math.round((event.loaded / event.total) * 100);
+        statusEl.textContent = `carregando Unidade 811... ${progress}%`;
+      } else {
+        statusEl.textContent = 'carregando Unidade 811...';
+      }
+    },
+    (error) => {
+      console.warn(`Falha ao carregar ${url}:`, error);
+      if (index + 1 < candidateModels.length) {
+        loadModelAt(index + 1);
+        return;
+      }
+      window.clearTimeout(timeout);
+      console.error('Falha ao carregar modelo 3D:', error);
+      setStatus('modelo 3D não carregou: verifique assets/backrooms.glb ou assets/backrooms.gltf', 4200);
     }
+  );
+}
 
-    bindScrollAnimation(gltf, exportedCamera);
-    setAnimationTimeFromScroll();
-
-    setStatus(hasCameraAnimation ? 'câmera do modelo conectada ao scroll' : 'modelo carregado / fallback de câmera ativo');
-  },
-  (event) => {
-    if (!statusEl) return;
-    if (event.total) {
-      const progress = Math.round((event.loaded / event.total) * 100);
-      statusEl.textContent = `carregando Unidade 811... ${progress}%`;
-    } else {
-      statusEl.textContent = 'carregando Unidade 811...';
-    }
-  },
-  (error) => {
-    window.clearTimeout(timeout);
-    console.error('Falha ao carregar GLTF:', error);
-    setStatus('modelo 3D não carregou: verifique assets/backrooms.gltf e assets/backrooms.bin', 4200);
-  }
-);
+loadModelAt(0);
 
 window.addEventListener('scroll', setAnimationTimeFromScroll, { passive: true });
 
-function animate() {
-  requestAnimationFrame(animate);
-  setAnimationTimeFromScroll();
-
-  const t = performance.now() * 0.001;
-  fluorescent.intensity = 0.72 + Math.sin(t * 1.6) * 0.045 + Math.sin(t * 7.4) * 0.015;
-
-  renderer.render(scene, camera);
-}
-
-animate();
-
 window.addEventListener('resize', () => {
+  if (!camera) return;
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.35 : 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
+}, { passive: true });
 
-  if (camera && camera.isPerspectiveCamera) {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-  }
-
-  setAnimationTimeFromScroll();
+renderer.setAnimationLoop(() => {
+  renderer.render(scene, camera);
 });
