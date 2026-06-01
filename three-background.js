@@ -21,7 +21,7 @@ renderer.shadowMap.enabled = false;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x050505);
-scene.fog = new THREE.FogExp2(0x090804, 0.006);
+scene.fog = new THREE.FogExp2(0x090804, 0.003);
 
 // Câmera atual do projeto, corrigida para não olhar para o teto.
 // O scroll percorre os 300 frames exportados.
