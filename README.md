@@ -1,31 +1,15 @@
 # Oregon 811 — Backrooms Landing Page
 
-Landing page conceitual que vende os Backrooms como um empreendimento imobiliário impossível, com estética premium corporativa, atmosfera liminal e responsividade para desktop e celular.
+Landing page estática, responsiva e sem dependências de build.
 
-## Rodar localmente
+## Como rodar
 
-```bash
-npm install
-npm run dev
-```
+Abra o arquivo `index.html` diretamente no navegador.
 
-Depois acesse o endereço mostrado pelo Vite no terminal.
+Também pode rodar com uma extensão tipo Live Server no VS Code, mas não precisa de npm.
 
-## Build
+## Arquivos
 
-```bash
-npm run build
-```
-
-## Estrutura
-
-```txt
-oregon-811-backrooms-landing/
-├── index.html
-├── package.json
-├── README.md
-└── src/
-    ├── App.jsx
-    ├── main.jsx
-    └── styles.css
-```
+- `index.html`
+- `styles.css`
+- `script.js`
