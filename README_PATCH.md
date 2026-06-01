@@ -1,24 +1,18 @@
-# Patch GitHub Pages
+# Patch Unidade 811 — GLTF + texturas definitivas
 
-Este patch corrige o erro de deploy concorrente no GitHub Pages.
-
-## Arquivos incluídos
+Inclui:
 
 ```txt
-.github/workflows/deploy.yml
-.nojekyll
+three-background.js
+assets/backrooms.gltf
+assets/carpet.jpg
+assets/wall.png
+assets/wall2.png
+README_PATCH.md
 ```
 
-## Como aplicar
-
-Copie os arquivos para a raiz do repositório e faça commit.
-
-O workflow usa:
-
-```yml
-concurrency:
-  group: pages
-  cancel-in-progress: true
-```
-
-Isso cancela automaticamente um deploy anterior ainda em andamento antes de iniciar o novo.
+Alterações:
+- teto com cor #CFCF9FFF
+- grid metálico
+- aplica texturas enviadas
+- mantém movimento da câmera por scroll
