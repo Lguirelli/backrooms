@@ -63,7 +63,8 @@ const materialTextures = {
   carpet: loadTexture('./assets/carpet.jpg', 9, 9),
   wallDot: loadTexture('./assets/wall.png', 5, 5),
   wallChevron: loadTexture('./assets/wall2.png', 7, 7),
-  metallicGrid: loadTexture('./assets/wall.png', 4, 4)
+  metallicGrid: loadTexture('./assets/wall.png', 4, 4),
+  ceiling: loadTexture('./assets/ceiling-texture.png', 6, 6)
 };
 
 function setStatus(text, hideDelay = 1800) {
@@ -127,10 +128,15 @@ function applyMaterials(root) {
         material.metalness = 0;
       }
 
-      if (name.includes('teto') || name.includes('ceiling')) {
-        material.map = null;
+      if (
+        (name.includes('teto') || name.includes('ceiling')) &&
+        !name.includes('luz') &&
+        !name.includes('light') &&
+        !name.includes('lamp')
+      ) {
+        material.map = materialTextures.ceiling;
         material.color.set(0xCFCF9F);
-        material.roughness = 0.84;
+        material.roughness = 0.9;
         material.metalness = 0;
       }
 

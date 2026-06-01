@@ -1,18 +1,15 @@
-# Patch Unidade 811 — GLTF + texturas definitivas
+# Patch — material do teto
 
-Inclui:
+Inclui apenas:
 
 ```txt
 three-background.js
-assets/backrooms.gltf
-assets/carpet.jpg
-assets/wall.png
-assets/wall2.png
+assets/ceiling-texture.png
 README_PATCH.md
 ```
 
 Alterações:
-- teto com cor #CFCF9FFF
-- grid metálico
-- aplica texturas enviadas
-- mantém movimento da câmera por scroll
+- usa a textura enviada como material do teto
+- aplica a textura apenas nas partes do teto que **não são luz**
+- mantém as áreas de luz com material emissivo
+- mantém o restante da lógica atual do GLTF e da câmera
