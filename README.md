@@ -1,91 +1,28 @@
-# Unidade 811 — landing page estática com GLB corrigido
+# Patch Unidade 811 — câmera do GLB no scroll e fade automático
 
-Versão sem npm, com HTML, CSS e JavaScript puro.
-
-## Como publicar no GitHub Pages
-
-Suba o conteúdo desta pasta na raiz do repositório:
-
-```txt
-/
-├─ index.html
-├─ styles.css
-├─ script.js
-├─ three-background.js
-├─ README.md
-└─ assets/
-   ├─ backrooms.glb
-   └─ planta-implantacao-unidade-811.png
-```
-
-Depois ative:
-
-```txt
-Settings → Pages → Deploy from branch → main → /root
-```
-
-## Como testar localmente
-
-O GLB e o Three.js usam módulo ES. Evite abrir direto com `file://`.
-
-Use:
-
-```bash
-python -m http.server 8000
-```
-
-Depois acesse:
-
-```txt
-http://localhost:8000
-```
-
-## Correções desta versão
-
-- GLB no fundo com z-index e renderização corrigidos.
-- Fallback 3D automático caso o arquivo GLB falhe.
-- Estética alinhada ao storytelling: imóvel corporativo real, raro e funcional, com estranhamento sutil.
-- Textos revisados com foco em ocupação, continuidade, permanência, rota indicada e escala incomum.
-- Responsivo para celular.
-
-- nova seção "Possibilidades" com fade entre imagens reais de ocupação
-
-- fundos e boxes transparentes para destacar o canvas 3D em movimento
-
-
-## Patch Unidade 811
-
-Este patch atualiza:
+Arquivos incluídos neste patch:
 
 ```txt
 index.html
 styles.css
 script.js
 three-background.js
-assets/backrooms.glb
 README.md
 ```
 
-Ajustes feitos:
+Não inclui assets.
 
-- nome visível do projeto alterado para Unidade 811
-- GLB original substitui o fundo 3D atual
-- movimento de câmera do GLB conectado ao scroll
-- renderização mais cinematográfica com ACES, fog, luz fluorescente e contraste controlado
-- fade da seção Possibilidades corrigido com script robusto após DOMContentLoaded
+Mantenha o modelo original neste caminho:
 
+```txt
+assets/backrooms.glb
+```
 
-## Correção cinematográfica do background
+Correções:
 
-O arquivo `backrooms SITE1 camera.glb` enviado não contém câmera, nós ou animações exportadas. Por isso, este patch não usa esse GLB como asset.
-
-A correção foi feita em código:
-
-- câmera procedural inspirada na referência enviada
-- ângulo mais baixo e lateral
-- FOV mais cinematográfico
-- fog mais denso
-- exposição reduzida
-- contraste, saturação e brightness ajustados no canvas
-- luz fluorescente quente e sutil
-- movimento da câmera conectado ao scroll
+- o GLB não é mais centralizado, escalado ou rotacionado via código
+- a câmera exportada do GLB é usada diretamente
+- a animação de câmera do GLB é conectada ao scroll com `mixer.setTime(progress * duration)`
+- o fundo recebeu tratamento cinematográfico sem esconder o modelo
+- o fade das imagens da seção Possibilidades roda automaticamente após alguns segundos
+- o nome visível permanece como Unidade 811

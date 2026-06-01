@@ -13,16 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
     hero.style.setProperty('--my', `${Math.max(0, Math.min(100, y))}%`);
   });
 
-  if (!prefersReducedMotion) {
-    const onScroll = () => {
-      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollable > 0 ? window.scrollY / scrollable : 0;
-      root.style.setProperty('--grid-y', `${progress * 180}px`);
-    };
+  const onScroll = () => {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = scrollable > 0 ? window.scrollY / scrollable : 0;
+    root.style.setProperty('--grid-y', `${progress * 180}px`);
+  };
 
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-  }
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
 
   const possibilityFrame = document.getElementById('possibilityFrame');
   const possibilitySlides = possibilityFrame ? Array.from(possibilityFrame.querySelectorAll('.possibility-slide')) : [];
@@ -32,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (possibilitySlides.length) {
     let activeIndex = 0;
-    let intervalId = null;
+    let intervalId;
 
     const updatePossibilitySlide = (index) => {
       possibilitySlides.forEach((slide, slideIndex) => {
@@ -40,18 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const activeSlide = possibilitySlides[index];
-
       if (possibilityCounter) {
         possibilityCounter.textContent = `${String(index + 1).padStart(2, '0')} / ${String(possibilitySlides.length).padStart(2, '0')}`;
       }
-
-      if (possibilityTitle) {
-        possibilityTitle.textContent = activeSlide.dataset.title || '';
-      }
-
-      if (possibilityText) {
-        possibilityText.textContent = activeSlide.dataset.desc || '';
-      }
+      if (possibilityTitle) possibilityTitle.textContent = activeSlide.dataset.title || '';
+      if (possibilityText) possibilityText.textContent = activeSlide.dataset.desc || '';
     };
 
     const nextSlide = () => {
@@ -60,22 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     updatePossibilitySlide(activeIndex);
+    intervalId = window.setInterval(nextSlide, prefersReducedMotion ? 6500 : 3200);
 
-    // Mantém fade ativo por padrão. Reduced motion apenas aumenta o intervalo.
-    const fadeInterval = prefersReducedMotion ? 6500 : 3200;
-    intervalId = window.setInterval(nextSlide, fadeInterval);
-
+    // No mobile não existe hover, então o fade continua automático.
     possibilityFrame.addEventListener('mouseenter', () => {
-      if (intervalId) {
-        window.clearInterval(intervalId);
-        intervalId = null;
-      }
+      if (!intervalId) return;
+      window.clearInterval(intervalId);
+      intervalId = null;
     });
 
     possibilityFrame.addEventListener('mouseleave', () => {
-      if (!intervalId) {
-        intervalId = window.setInterval(nextSlide, fadeInterval);
-      }
+      if (intervalId) return;
+      intervalId = window.setInterval(nextSlide, prefersReducedMotion ? 6500 : 3200);
     });
   }
 });
