@@ -51,3 +51,26 @@ http://localhost:8000
 - nova seção "Possibilidades" com fade entre imagens reais de ocupação
 
 - fundos e boxes transparentes para destacar o canvas 3D em movimento
+
+
+## Patch aplicado para o GLB aparecer
+
+Este patch corrige o carregamento do Three.js no navegador.
+
+O problema mais provável era o `GLTFLoader.js` importar `three` como módulo interno sem um `importmap`, fazendo o navegador travar antes de renderizar o GLB.
+
+Arquivos alterados:
+
+```txt
+index.html
+three-background.js
+README.md
+```
+
+Não inclui assets.
+
+Mantenha o arquivo abaixo no repositório:
+
+```txt
+assets/backrooms.glb
+```
