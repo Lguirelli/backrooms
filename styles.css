@@ -1161,3 +1161,23 @@ h3,
     line-height: 1.6 !important;
   }
 }
+
+
+/* Fix containers visibility */
+.hero-card,
+.panel,
+.benefit-card,
+.proof-grid article,
+.possibility-frame,
+.faq-card,
+.hero-visual-card,
+.proof-panel,
+.testimonials-panel,
+.commercial-panel,
+.visit-panel,
+.cta-panel {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
