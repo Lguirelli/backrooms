@@ -309,3 +309,190 @@ window.addEventListener('resize', () => {
 
   setCameraFromScroll();
 });
+/* =========================================================
+   FAKE AMBIENT OCCLUSION
+   Colar no final do three-background.js existente
+   ========================================================= */
+
+const FAKE_AO_CONFIG = {
+  strength: 0.72,
+  maxDarken: 0.52,
+
+  floorDistanceRatio: 0.16,
+  ceilingDistanceRatio: 0.10,
+  sideDistanceRatio: 0.09,
+
+  minFloorDistance: 0.42,
+  minCeilingDistance: 0.28,
+  minSideDistance: 0.34,
+
+  floorWeight: 0.42,
+  ceilingWeight: 0.22,
+  sideWeight: 0.24,
+  cornerWeight: 0.46,
+  cavityWeight: 0.18
+};
+
+function fakeAOClamp01(value) {
+  return Math.min(Math.max(value, 0), 1);
+}
+
+function fakeAOSmoothstep(edge0, edge1, value) {
+  const t = fakeAOClamp01((value - edge0) / Math.max(edge1 - edge0, 0.00001));
+  return t * t * (3 - 2 * t);
+}
+
+function fakeAOInverseSmoothstep(edge0, edge1, value) {
+  return 1 - fakeAOSmoothstep(edge0, edge1, value);
+}
+
+function getFakeAOColor(baseColor, ao) {
+  const darken = 1 - Math.min(
+    ao * FAKE_AO_CONFIG.strength,
+    FAKE_AO_CONFIG.maxDarken
+  );
+
+  return {
+    r: baseColor.r * darken,
+    g: baseColor.g * darken,
+    b: baseColor.b * darken
+  };
+}
+
+function applyFakeAmbientOcclusionToMesh(object) {
+  const geometry = object.geometry;
+
+  if (!geometry || !geometry.attributes || !geometry.attributes.position) return;
+  if (!object.material) return;
+
+  geometry.computeBoundingBox();
+  geometry.computeVertexNormals();
+
+  const position = geometry.attributes.position;
+  const normal = geometry.attributes.normal;
+  const box = geometry.boundingBox;
+
+  if (!box) return;
+
+  const size = new THREE.Vector3();
+  box.getSize(size);
+
+  const height = Math.max(size.y, 0.0001);
+  const width = Math.max(size.x, 0.0001);
+  const depth = Math.max(size.z, 0.0001);
+
+  const floorDistance = Math.max(
+    height * FAKE_AO_CONFIG.floorDistanceRatio,
+    FAKE_AO_CONFIG.minFloorDistance
+  );
+
+  const ceilingDistance = Math.max(
+    height * FAKE_AO_CONFIG.ceilingDistanceRatio,
+    FAKE_AO_CONFIG.minCeilingDistance
+  );
+
+  const sideDistanceX = Math.max(
+    width * FAKE_AO_CONFIG.sideDistanceRatio,
+    FAKE_AO_CONFIG.minSideDistance
+  );
+
+  const sideDistanceZ = Math.max(
+    depth * FAKE_AO_CONFIG.sideDistanceRatio,
+    FAKE_AO_CONFIG.minSideDistance
+  );
+
+  const baseColor = object.material.color
+    ? object.material.color.clone()
+    : new THREE.Color(0xffffff);
+
+  const colors = new Float32Array(position.count * 3);
+
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+
+    const nx = normal ? normal.getX(i) : 0;
+    const ny = normal ? normal.getY(i) : 1;
+    const nz = normal ? normal.getZ(i) : 0;
+
+    const distanceFromFloor = y - box.min.y;
+    const distanceFromCeiling = box.max.y - y;
+
+    const distanceFromLeft = x - box.min.x;
+    const distanceFromRight = box.max.x - x;
+
+    const distanceFromBack = z - box.min.z;
+    const distanceFromFront = box.max.z - z;
+
+    const verticalSurface = 1 - Math.abs(ny);
+    const horizontalSurface = Math.abs(ny);
+
+    const floorAO = fakeAOInverseSmoothstep(
+      0,
+      floorDistance,
+      distanceFromFloor
+    );
+
+    const ceilingAO = fakeAOInverseSmoothstep(
+      0,
+      ceilingDistance,
+      distanceFromCeiling
+    );
+
+    const sideXAO = Math.max(
+      fakeAOInverseSmoothstep(0, sideDistanceX, distanceFromLeft),
+      fakeAOInverseSmoothstep(0, sideDistanceX, distanceFromRight)
+    );
+
+    const sideZAO = Math.max(
+      fakeAOInverseSmoothstep(0, sideDistanceZ, distanceFromBack),
+      fakeAOInverseSmoothstep(0, sideDistanceZ, distanceFromFront)
+    );
+
+    const sideAO = Math.max(sideXAO, sideZAO);
+    const cornerAO = Math.sqrt(sideXAO * sideZAO);
+
+    const cavityAO =
+      Math.max(0, -ny) * 0.35 +
+      Math.abs(nx) * sideXAO * 0.18 +
+      Math.abs(nz) * sideZAO * 0.18;
+
+    const ao =
+      floorAO * FAKE_AO_CONFIG.floorWeight * verticalSurface +
+      ceilingAO * FAKE_AO_CONFIG.ceilingWeight * verticalSurface +
+      sideAO * FAKE_AO_CONFIG.sideWeight +
+      cornerAO * FAKE_AO_CONFIG.cornerWeight +
+      cavityAO * FAKE_AO_CONFIG.cavityWeight * horizontalSurface;
+
+    const finalAO = fakeAOClamp01(ao);
+    const finalColor = getFakeAOColor(baseColor, finalAO);
+
+    colors[i * 3 + 0] = finalColor.r;
+    colors[i * 3 + 1] = finalColor.g;
+    colors[i * 3 + 2] = finalColor.b;
+  }
+
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  object.material.vertexColors = true;
+  object.material.needsUpdate = true;
+}
+
+function applyFakeAmbientOcclusionToRoot(root) {
+  root.traverse((object) => {
+    if (!object.isMesh) return;
+
+    applyFakeAmbientOcclusionToMesh(object);
+  });
+}
+
+/* Intercepta a função original sem precisar editar o código acima */
+if (typeof applyMaterials === 'function') {
+  const originalApplyMaterials = applyMaterials;
+
+  applyMaterials = function patchedApplyMaterials(root) {
+    originalApplyMaterials(root);
+    applyFakeAmbientOcclusionToRoot(root);
+  };
+}
