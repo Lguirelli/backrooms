@@ -992,3 +992,172 @@ h2 {
     border-radius: 18px !important;
   }
 }
+
+
+/* Patch — transparência geral, hero reorganizado e planta visível */
+.hero-card,
+.panel,
+.benefit-card,
+.proof-grid article,
+.possibility-frame,
+.faq-card,
+.hero-visual-card,
+.proof-panel,
+.testimonials-panel,
+.commercial-panel,
+.visit-panel,
+.cta-panel {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* A única caixa visível permanece sendo a planta */
+.site-plan-card {
+  background: rgba(247,241,223,.94) !important;
+  border: 1px solid rgba(247,241,223,.32) !important;
+  box-shadow: 0 30px 90px rgba(0,0,0,.34) !important;
+  backdrop-filter: none !important;
+}
+
+/* Hero sem moldura visível */
+.hero-card {
+  border: 0 !important;
+}
+
+.hero-card::before,
+.hero-card::after {
+  display: none !important;
+}
+
+.hero-visual-card {
+  border: 0 !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+}
+
+.hero-visual-card::before {
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,.02), rgba(0,0,0,.16) 48%, rgba(0,0,0,.68) 100%),
+    radial-gradient(circle at 34% 16%, rgba(241,223,134,.12), transparent 26%) !important;
+}
+
+/* Unidade 811 em uma linha e menor */
+.hero-title {
+  font-size: clamp(48px, 6.8vw, 96px) !important;
+  line-height: .92 !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+}
+
+/* Remove visualmente a chamada antiga e puxa o texto descritivo para a esquerda */
+.hero-copy-grid {
+  display: block !important;
+  max-width: 480px !important;
+  margin-top: 28px !important;
+}
+
+.hero-kicker {
+  display: none !important;
+}
+
+.hero-lead-group {
+  max-width: 460px !important;
+}
+
+.hero-lead {
+  font-size: clamp(18px, 1.7vw, 22px) !important;
+  line-height: 1.7 !important;
+  margin: 0 0 16px 0 !important;
+}
+
+.hero-note {
+  font-size: clamp(16px, 1.45vw, 19px) !important;
+  line-height: 1.7 !important;
+  margin: 0 !important;
+}
+
+.hero-main {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+/* Glow nos textos de destaque, sem caixa pesada por trás */
+.hero-title,
+h2,
+h3,
+.hero-note,
+.eyebrow,
+.hero-visual-caption span,
+.hero-visual-caption strong {
+  text-shadow:
+    0 0 16px rgba(247,241,223,.10),
+    0 0 36px rgba(216,192,92,.08) !important;
+}
+
+/* Mantém legibilidade do fundo mais limpa */
+.section-heading p,
+.hero-lead,
+.proof-grid p,
+.benefit-card p,
+.site-plan-notes p,
+.possibility-caption p,
+.narrative-strip p,
+.commercial-panel p,
+.visit-panel p,
+.cta-panel p {
+  text-shadow: none !important;
+}
+
+/* Remover qualquer linha/borda aleatória restante */
+.vline,
+.vline-1,
+.vline-2,
+.vline-3,
+.hero-card > .vline,
+.panel::before,
+.panel::after {
+  display: none !important;
+}
+
+.section-heading,
+.proof-grid,
+.benefit-grid,
+.possibility-layout,
+.plan-layout {
+  border-color: transparent !important;
+}
+
+@media (max-width: 1140px) {
+  .hero-title {
+    white-space: normal !important;
+  }
+
+  .hero-copy-grid,
+  .hero-lead-group {
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: min(15vw, 68px) !important;
+    line-height: .95 !important;
+  }
+
+  .hero-copy-grid {
+    margin-top: 18px !important;
+  }
+
+  .hero-lead {
+    font-size: 17px !important;
+    line-height: 1.6 !important;
+  }
+
+  .hero-note {
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+  }
+}
