@@ -724,3 +724,271 @@ h2 {
     border-radius: 18px;
   }
 }
+
+
+/* Complete fix patch — Unidade 811 */
+:root {
+  --unit-cream: #f7f1df;
+  --unit-yellow: #d8c05c;
+  --unit-yellow-soft: #f1df86;
+  --unit-panel: rgba(5, 6, 5, .72);
+  --unit-panel-soft: rgba(5, 6, 5, .58);
+  --unit-line: rgba(216,192,92,.18);
+}
+
+/* Less random markings */
+.vline,
+.vline-1,
+.vline-2,
+.vline-3 {
+  display: none !important;
+}
+
+.grid-bg::before {
+  opacity: .014 !important;
+}
+
+.scanlines::before {
+  opacity: .032 !important;
+}
+
+.noise::before {
+  opacity: .038 !important;
+}
+
+/* More opaque background instead of heavy text shadow */
+.scene-gradient {
+  background:
+    linear-gradient(to bottom, rgba(3,3,2,.44), rgba(3,3,2,.52) 22%, rgba(3,3,2,.66) 62%, rgba(3,3,2,.88) 100%),
+    radial-gradient(circle at 52% 42%, transparent 0 44%, rgba(0,0,0,.18) 74%, rgba(0,0,0,.62) 100%) !important;
+}
+
+.scene-depth {
+  background:
+    linear-gradient(to right, rgba(0,0,0,.64), rgba(0,0,0,.18) 28%, rgba(0,0,0,.16) 62%, rgba(0,0,0,.68)),
+    linear-gradient(to bottom, rgba(216,192,92,.04), rgba(0,0,0,.22)) !important;
+}
+
+.scene-vignette {
+  box-shadow: inset 0 0 220px rgba(0,0,0,.68) !important;
+}
+
+#scene {
+  filter: contrast(1.05) saturate(.94) brightness(.74) !important;
+}
+
+/* Panels are present, but clean and intentional */
+.hero-card,
+.panel,
+.benefit-card,
+.proof-grid article,
+.possibility-frame,
+.faq-card {
+  background: var(--unit-panel-soft) !important;
+  border: 1px solid rgba(247,241,223,.09) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.hero-card {
+  background:
+    radial-gradient(circle at var(--mx) var(--my), rgba(216,192,92,.08), transparent 35%),
+    rgba(5,6,5,.58) !important;
+}
+
+.hero-card::before {
+  opacity: .08 !important;
+}
+
+/* Text glow, not drop shadow */
+.hero-title,
+h2 {
+  text-shadow:
+    0 0 18px rgba(247,241,223,.12),
+    0 0 42px rgba(216,192,92,.08) !important;
+}
+
+.hero-kicker,
+h3,
+.nav-logo,
+.brand-mark,
+.hero-nav nav a {
+  text-shadow: 0 0 16px rgba(247,241,223,.10) !important;
+}
+
+.eyebrow,
+.hero-note,
+.benefit-card span,
+.proof-grid span,
+.site-plan-notes span,
+.possibility-counter,
+.hero-visual-caption span {
+  color: var(--unit-yellow-soft) !important;
+  text-shadow: 0 0 14px rgba(216,192,92,.22) !important;
+}
+
+.hero-lead,
+.section-copy p,
+.atmosphere-copy p,
+.plan-copy > p,
+.cta-panel > p,
+.visit-panel > p,
+.commercial-panel > p,
+.section-heading p,
+.narrative-strip p,
+.benefit-card p,
+.proof-grid p,
+.faq-card p,
+.site-plan-notes p,
+.possibility-caption p {
+  text-shadow: none !important;
+}
+
+/* Better section balance */
+.two-col,
+.proof-heading {
+  grid-template-columns: minmax(0, .95fr) minmax(320px, .75fr) !important;
+  gap: clamp(28px, 5vw, 74px) !important;
+  align-items: center !important;
+}
+
+.section-heading {
+  margin-bottom: clamp(32px, 4vw, 48px) !important;
+}
+
+h2 {
+  max-width: 980px;
+  font-size: clamp(30px, 4.2vw, 58px) !important;
+  line-height: .96 !important;
+}
+
+.hero-title {
+  font-size: clamp(62px, 10.4vw, 128px) !important;
+  line-height: .8 !important;
+}
+
+.hero-kicker {
+  font-size: clamp(22px, 2.6vw, 36px) !important;
+  line-height: 1 !important;
+}
+
+.hero-copy-grid {
+  grid-template-columns: minmax(260px, .7fr) minmax(300px, 1fr) !important;
+}
+
+/* Restore Planta de Implantação box */
+.site-plan-card {
+  background: rgba(247,241,223,.92) !important;
+  border: 1px solid rgba(247,241,223,.38) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  box-shadow: 0 30px 90px rgba(0,0,0,.35) !important;
+  backdrop-filter: none !important;
+}
+
+.site-plan-toolbar {
+  background: rgba(5,6,5,.86) !important;
+  color: rgba(247,241,223,.72) !important;
+  border-bottom: 1px solid rgba(247,241,223,.12) !important;
+}
+
+.site-plan-frame {
+  background: #fff !important;
+}
+
+.site-plan-frame img {
+  background: #fff !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  filter: contrast(1.04) brightness(1.01) !important;
+}
+
+.site-plan-frame figcaption {
+  color: rgba(5,6,5,.56) !important;
+}
+
+.site-plan-notes {
+  background: rgba(5,6,5,.92) !important;
+  border-top: 1px solid rgba(216,192,92,.2) !important;
+}
+
+.site-plan-notes article {
+  border-color: rgba(216,192,92,.14) !important;
+}
+
+/* Proof / Conceito balance */
+.proof-panel {
+  padding-block: clamp(34px, 5vw, 62px) !important;
+}
+
+.proof-heading h2 {
+  max-width: 740px;
+  font-size: clamp(32px, 4.3vw, 64px) !important;
+}
+
+.proof-heading > p {
+  max-width: 520px;
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+.proof-grid {
+  gap: clamp(18px, 3vw, 36px) !important;
+}
+
+.proof-grid article {
+  min-height: 230px;
+  display: grid;
+  align-content: start;
+  padding: clamp(22px, 3vw, 34px) !important;
+  background: rgba(5,6,5,.48) !important;
+}
+
+.proof-grid span {
+  margin-bottom: 36px !important;
+}
+
+/* Possibility fade reliable */
+.possibility-slide {
+  opacity: 0 !important;
+  transition: opacity 1400ms ease-in-out !important;
+}
+
+.possibility-slide.is-active {
+  opacity: 1 !important;
+}
+
+/* Keep hero image clean */
+.hero-visual-card {
+  background: rgba(5,6,5,.38) !important;
+  border: 1px solid rgba(247,241,223,.08) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.22) !important;
+  backdrop-filter: none !important;
+}
+
+.hero-visual-card img {
+  filter: saturate(.82) contrast(1.05) brightness(.78) !important;
+}
+
+@media (max-width: 1140px) {
+  .two-col,
+  .proof-heading,
+  .hero-copy-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: min(18vw, 82px) !important;
+  }
+
+  h2,
+  .proof-heading h2 {
+    font-size: clamp(26px, 8.4vw, 40px) !important;
+  }
+
+  .site-plan-card {
+    border-radius: 18px !important;
+  }
+}

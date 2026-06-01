@@ -63,3 +63,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.setInterval(nextSlide, prefersReducedMotion ? 6200 : 3200);
   }
 });
+
+document.documentElement.classList.add('is-ready');
