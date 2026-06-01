@@ -550,3 +550,177 @@ body {
     filter: contrast(1.06) saturate(1.02) brightness(.82) !important;
   }
 }
+
+
+/* Patch visual: boxes invisíveis, paleta mais presente e títulos 75% */
+:root {
+  --unit-yellow: #d8c05c;
+  --unit-yellow-soft: #f1df86;
+  --unit-cream: #f7f1df;
+  --unit-shadow-heavy: 0 8px 22px rgba(0,0,0,.86), 0 2px 3px rgba(0,0,0,.72);
+}
+
+/* Remove leitura de box/card sem apagar o conteúdo */
+.hero-card,
+.panel,
+.benefit-card,
+.site-plan-card,
+.proof-grid article,
+.possibility-frame,
+.hero-visual-card,
+.faq-card {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Mantém apenas a foto como imagem, sem moldura visível */
+.hero-visual-card {
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.hero-visual-card::before {
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,.02), rgba(0,0,0,.18) 48%, rgba(0,0,0,.74) 100%),
+    radial-gradient(circle at 34% 16%, rgba(241,223,134,.18), transparent 26%) !important;
+}
+
+/* Botões e tags continuam visíveis como elementos de interface */
+.hero-tags span,
+.possibility-tags span,
+.commercial-panel li,
+.btn-ghost,
+.round-icon,
+.faq-card > span {
+  border-color: rgba(216,192,92,.34) !important;
+  background: rgba(216,192,92,.08) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.28) !important;
+  backdrop-filter: blur(5px) !important;
+}
+
+.btn-primary {
+  background: var(--unit-cream) !important;
+  color: #080806 !important;
+  box-shadow: 0 16px 42px rgba(0,0,0,.36), 0 0 34px rgba(216,192,92,.18) !important;
+}
+
+.btn-primary:hover {
+  background: var(--unit-yellow-soft) !important;
+}
+
+/* Paleta mais presente em detalhes */
+.eyebrow,
+.hero-note,
+.benefit-card span,
+.proof-grid span,
+.site-plan-notes span,
+.possibility-counter,
+.hero-visual-caption span {
+  color: var(--unit-yellow-soft) !important;
+  text-shadow: 0 4px 14px rgba(0,0,0,.82);
+}
+
+.hero-visual-caption strong,
+.nav-logo,
+.brand-mark,
+.hero-nav nav a {
+  color: var(--unit-cream) !important;
+  text-shadow: 0 5px 18px rgba(0,0,0,.8);
+}
+
+/* Drop shadow pesado para leitura sobre o GLB */
+.hero-title,
+.hero-kicker,
+h2,
+h3,
+.hero-lead,
+.hero-note,
+.section-copy p,
+.atmosphere-copy p,
+.plan-copy > p,
+.cta-panel > p,
+.visit-panel > p,
+.commercial-panel > p,
+.section-heading p,
+.narrative-strip p,
+.benefit-card p,
+.proof-grid p,
+.faq-card p,
+.site-plan-notes p,
+.possibility-caption p,
+.possibility-caption strong {
+  text-shadow: var(--unit-shadow-heavy) !important;
+}
+
+/* Reduz títulos para 75% do tamanho visual anterior */
+.hero-title {
+  font-size: clamp(61.5px, 11.625vw, 121.5px) !important;
+  line-height: .8 !important;
+}
+
+.hero-kicker {
+  font-size: clamp(22.5px, 3vw, 40.5px) !important;
+  line-height: .98 !important;
+}
+
+h2 {
+  font-size: clamp(27px, 4.35vw, 54px) !important;
+  line-height: .96 !important;
+}
+
+.visit-panel h2,
+.cta-panel h2 {
+  font-size: clamp(30px, 4.5vw, 58.5px) !important;
+}
+
+.commercial-panel h3 {
+  font-size: clamp(19.5px, 2.25vw, 28.5px) !important;
+}
+
+.possibility-caption strong {
+  font-size: clamp(18px, 2.25vw, 25.5px) !important;
+}
+
+/* Ajuste de respiro após reduzir títulos */
+.hero-layout {
+  align-items: center;
+}
+
+.hero-content {
+  gap: 24px;
+}
+
+.hero-copy-grid {
+  margin-top: 18px !important;
+}
+
+/* Menos interferência de grid em cima do modelo */
+.grid-bg::before {
+  opacity: .018 !important;
+}
+
+.scene-gradient {
+  background:
+    linear-gradient(to bottom, rgba(3,3,2,.02), rgba(3,3,2,.06) 24%, rgba(3,3,2,.22) 66%, rgba(3,3,2,.72) 100%),
+    radial-gradient(circle at 50% 42%, transparent 0 48%, rgba(0,0,0,.1) 74%, rgba(0,0,0,.5) 100%) !important;
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: min(17.25vw, 78px) !important;
+  }
+
+  .hero-kicker {
+    font-size: clamp(19.5px, 6.75vw, 28.5px) !important;
+  }
+
+  h2 {
+    font-size: clamp(22.5px, 7.5vw, 34.5px) !important;
+  }
+
+  .hero-visual-card {
+    border-radius: 18px;
+  }
+}
