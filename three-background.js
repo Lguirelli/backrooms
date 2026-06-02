@@ -2,21 +2,23 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js';
 
 const CONFIG = {
-  clearColor: 0x0a0a0a,
-  exposure: 1.65,
+  clearColor: 0x050505,
+  exposure: 1.35,
 
+  // Movimento baseado na câmera original do GLB.
   scrollForwardDistance: 10,
   rightTurnRadians: -0.55,
   rightTurnPower: 1.35,
 
-  wigglePositionStrength: 0.012,
-  wiggleRotationStrength: 0.004,
+  wigglePositionStrength: 0.01,
+  wiggleRotationStrength: 0.0035,
   wiggleSpeed: 0.85,
 
-  ambientIntensity: 1.4,
-  keyIntensity: 1.1,
-  fillIntensity: 0.65,
-  frontIntensity: 0.55
+  // Luzes leves de segurança. As luzes reais do cam.glb continuam sendo usadas.
+  ambientIntensity: 0.95,
+  keyIntensity: 0.55,
+  fillIntensity: 0.35,
+  frontIntensity: 0.22
 };
 
 const canvas = document.getElementById('scene');
@@ -42,25 +44,26 @@ scene.background = new THREE.Color(CONFIG.clearColor);
 
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 4000);
 
-const ambient = new THREE.HemisphereLight(0xffffff, 0x2e2e2e, CONFIG.ambientIntensity);
+const ambient = new THREE.HemisphereLight(0xffffff, 0x303030, CONFIG.ambientIntensity);
 scene.add(ambient);
 
-const keyLight = new THREE.DirectionalLight(0xfff2d6, CONFIG.keyIntensity);
+const keyLight = new THREE.DirectionalLight(0xfff0d2, CONFIG.keyIntensity);
 keyLight.position.set(8, 10, 4);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0xcfd8ff, CONFIG.fillIntensity);
-fillLight.position.set(-6, 4, -5);
+const fillLight = new THREE.DirectionalLight(0xdde4ff, CONFIG.fillIntensity);
+fillLight.position.set(-7, 5, -6);
 scene.add(fillLight);
 
-const frontLight = new THREE.PointLight(0xffffff, CONFIG.frontIntensity, 30);
-frontLight.position.set(0, 4, 6);
+const frontLight = new THREE.PointLight(0xffffff, CONFIG.frontIntensity, 28);
+frontLight.position.set(0, 3, 6);
 scene.add(frontLight);
 
-let gltfRoot = null;
+let modelLoaded = false;
+let loadedCamera = null;
 let baseCameraPosition = new THREE.Vector3();
 let baseCameraQuaternion = new THREE.Quaternion();
-let loadedCamera = null;
+let lastScrollProgress = -1;
 
 function setStatus(text, hideDelay = 1800) {
   if (!statusEl) return;
@@ -81,7 +84,7 @@ function easeInOutCubic(t) {
     : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function setupOriginalMaterials(root) {
+function prepareGLBWithoutChangingMaterials(root) {
   root.traverse((object) => {
     if (!object.isMesh) return;
 
@@ -89,62 +92,41 @@ function setupOriginalMaterials(root) {
     object.castShadow = false;
     object.receiveShadow = false;
 
+    // Importante: não troca, não clona e não corrige textura manualmente.
+    // O GLTFLoader já aplica corretamente as texturas embutidas no GLB.
     const materials = Array.isArray(object.material) ? object.material : [object.material];
-
-    materials.forEach((mat) => {
-      if (!mat) return;
-
-      // Mantém exatamente os materiais do GLB
-      mat.needsUpdate = true;
-
-      if (mat.map) {
-        mat.map.needsUpdate = true;
-      }
-
-      if (mat.normalMap) {
-        mat.normalMap.needsUpdate = true;
-      }
-
-      if (mat.roughnessMap) {
-        mat.roughnessMap.needsUpdate = true;
-      }
-
-      if (mat.metalnessMap) {
-        mat.metalnessMap.needsUpdate = true;
-      }
-
-      if (mat.aoMap) {
-        mat.aoMap.needsUpdate = true;
-      }
-
-      if (mat.emissiveMap) {
-        mat.emissiveMap.needsUpdate = true;
-      }
+    materials.forEach((material) => {
+      if (!material) return;
+      material.needsUpdate = true;
     });
   });
 }
 
-function findBestCamera(root) {
-  let found = null;
+function findBestCamera(root, cameras = []) {
+  let cameraFromScene = null;
 
   root.traverse((object) => {
-    if (object.isCamera && !found) {
-      found = object;
+    if (!cameraFromScene && object.isCamera) {
+      cameraFromScene = object;
     }
   });
 
-  return found;
+  return cameraFromScene || cameras[0] || null;
 }
 
 function applyCameraBaseFromGLB(sourceCamera) {
   loadedCamera = sourceCamera;
 
-  baseCameraPosition.copy(sourceCamera.position);
-  baseCameraQuaternion.copy(sourceCamera.quaternion);
+  // Ponto principal da correção:
+  // usa transformação GLOBAL da câmera do GLB, não posição/rotação local.
+  // Isso evita câmera deslocada, parede gigante na frente e aparência de material quebrado.
+  sourceCamera.updateMatrixWorld(true);
+  sourceCamera.getWorldPosition(baseCameraPosition);
+  sourceCamera.getWorldQuaternion(baseCameraQuaternion);
 
   camera.fov = sourceCamera.fov || 42;
   camera.near = sourceCamera.near || 0.1;
-  camera.far = sourceCamera.far || 4000;
+  camera.far = Math.max(sourceCamera.far || 100, 4000);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
@@ -152,15 +134,24 @@ function applyCameraBaseFromGLB(sourceCamera) {
   camera.quaternion.copy(baseCameraQuaternion);
 }
 
-function updateCameraFromScroll() {
+function updateCameraFromScroll(force = false) {
   if (!loadedCamera) return;
 
   const scroll = getScrollProgress();
-  const eased = easeInOutCubic(scroll);
   const t = performance.now() * 0.001;
 
-  const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(baseCameraQuaternion).normalize();
-  const moveForward = forward.clone().multiplyScalar(eased * CONFIG.scrollForwardDistance);
+  if (!force && Math.abs(scroll - lastScrollProgress) < 0.00001) {
+    // Mantém o wiggle rodando mesmo sem scroll.
+  }
+
+  lastScrollProgress = scroll;
+
+  const eased = easeInOutCubic(scroll);
+  const forward = new THREE.Vector3(0, 0, -1)
+    .applyQuaternion(baseCameraQuaternion)
+    .normalize();
+
+  const moveForward = forward.multiplyScalar(eased * CONFIG.scrollForwardDistance);
 
   const rightTurn = Math.pow(scroll, CONFIG.rightTurnPower) * CONFIG.rightTurnRadians;
   const wigglePosX = Math.sin(t * CONFIG.wiggleSpeed * 1.37) * CONFIG.wigglePositionStrength;
@@ -181,19 +172,28 @@ function updateCameraFromScroll() {
 
 const loader = new GLTFLoader();
 
+const timeout = window.setTimeout(() => {
+  if (!modelLoaded) setStatus('carregamento lento do modelo 3D', 2600);
+}, 8000);
+
 loader.load(
   './assets/cam.glb',
   (gltf) => {
-    gltfRoot = gltf.scene;
+    window.clearTimeout(timeout);
+    modelLoaded = true;
 
-    setupOriginalMaterials(gltfRoot);
-    scene.add(gltfRoot);
+    const root = gltf.scene;
+    scene.add(root);
+    root.updateMatrixWorld(true);
 
-    const sceneCamera = findBestCamera(gltf.scene) || gltf.cameras?.[0];
+    prepareGLBWithoutChangingMaterials(root);
+
+    const sceneCamera = findBestCamera(root, gltf.cameras);
 
     if (sceneCamera) {
       applyCameraBaseFromGLB(sceneCamera);
-      setStatus('cam.glb carregado / câmera original aplicada');
+      updateCameraFromScroll(true);
+      setStatus('cam.glb carregado / materiais preservados');
     } else {
       camera.position.set(0, 2, 8);
       camera.lookAt(0, 2, 0);
@@ -211,6 +211,7 @@ loader.load(
     }
   },
   (error) => {
+    window.clearTimeout(timeout);
     console.error('Falha ao carregar cam.glb:', error);
     setStatus('erro ao carregar assets/cam.glb', 4200);
   }
@@ -222,7 +223,7 @@ function animate() {
   updateCameraFromScroll();
 
   const t = performance.now() * 0.001;
-  frontLight.intensity = CONFIG.frontIntensity + Math.sin(t * 0.8) * 0.03;
+  frontLight.intensity = CONFIG.frontIntensity + Math.sin(t * 0.8) * 0.018;
 
   renderer.render(scene, camera);
 }
@@ -235,4 +236,6 @@ window.addEventListener('resize', () => {
 
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+
+  updateCameraFromScroll(true);
 });

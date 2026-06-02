@@ -1,12 +1,15 @@
 #scene {
-  filter: none;
+  filter: none !important;
 }
 
+.scene-depth,
+.scene-gradient,
+.scene-vignette,
 .scene-wrapper::before,
 .scene-wrapper::after,
 .three-background::before,
 .three-background::after,
 .hero::before,
 .hero::after {
-  pointer-events: none;
+  display: none !important;
 }
