@@ -1,40 +1,46 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js';
-import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/environments/RoomEnvironment.js';
+
+/* =========================================================
+   BACKGROUND 3D — CAM2.GLB
+   - Usa apenas ./assets/cam.glb
+   - Mantém materiais, texturas e luzes originais do GLB
+   - Mantém a câmera existente do GLB como base exata
+   - Scroll: avança para frente + gira progressivamente para a direita
+   - Wiggle leve constante aplicado em cima da câmera original
+   ========================================================= */
 
 const CONFIG = {
   modelUrl: './assets/cam.glb',
 
-  // Correção principal: o GLB atual está vindo muito escuro/baked.
-  exposure: 2.35,
-  background: 0x15120d,
+  renderer: {
+    pixelRatioDesktop: 1.75,
+    pixelRatioMobile: 1.25,
+    exposure: 1.55,
+    clearColor: 0x050505
+  },
 
-  // Mantém o modelo visível sem depender de fog/overlay escuro.
-  fogEnabled: false,
-  fogColor: 0x15120d,
-  fogDensity: 0.0004,
+  cameraMotion: {
+    forwardDistance: 9.5,
+    rightTurnRadians: -0.95,
+    rightTurnPower: 1.28,
+    scrollLerp: 0.075
+  },
 
-  // Movimento de scroll.
-  scrollForwardDistance: 7.5,
-  scrollRightDrift: 0.32,
-  rightTurnRadians: -1.08,
-  rightTurnPower: 1.28,
-  smoothFactor: 0.078,
+  wiggle: {
+    enabled: true,
+    speed: 0.82,
+    positionStrength: 0.015,
+    rotationStrength: 0.0045
+  },
 
-  // Wiggle constante e leve.
-  wigglePositionStrength: 0.015,
-  wiggleRotationStrength: 0.0045,
-  wiggleSpeed: 0.82,
-
-  // Compensação de textura escura. Não substitui material do GLB.
-  materialBrightnessLift: 0.18,
-  textureEmissiveLift: 0.34,
-
-  // Ceiling_Lights ilumina visualmente e também gera luz real no Three.js.
-  ceilingLightEmissiveIntensity: 5.5,
-  generatedLightIntensity: 4.8,
-  generatedLightDistance: 30,
-  maxGeneratedLights: 8
+  // Mantém as luzes do GLB. Estas luzes extras são apenas preenchimento leve.
+  safetyLighting: {
+    enabled: true,
+    ambientIntensity: 0.28,
+    hemisphereIntensity: 0.38,
+    frontalIntensity: 0.22
+  }
 };
 
 const canvas = document.getElementById('scene');
@@ -47,107 +53,113 @@ const renderer = new THREE.WebGLRenderer({
   powerPreference: 'high-performance'
 });
 
-function setRendererSize() {
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.35 : 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-setRendererSize();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = CONFIG.exposure;
-renderer.setClearColor(CONFIG.background, 1);
+renderer.toneMappingExposure = CONFIG.renderer.exposure;
+renderer.setClearColor(CONFIG.renderer.clearColor, 1);
 renderer.shadowMap.enabled = false;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(CONFIG.background);
+scene.background = new THREE.Color(CONFIG.renderer.clearColor);
+scene.fog = null;
 
-if (CONFIG.fogEnabled) {
-  scene.fog = new THREE.FogExp2(CONFIG.fogColor, CONFIG.fogDensity);
+let camera = null;
+let modelLoaded = false;
+let activeCameraReady = false;
+let scrollTarget = 0;
+let scrollCurrent = 0;
+
+const baseCameraPosition = new THREE.Vector3();
+const baseCameraQuaternion = new THREE.Quaternion();
+const baseCameraEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+const baseForward = new THREE.Vector3(0, 0, -1);
+const tempPosition = new THREE.Vector3();
+const tempEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+const tempVector = new THREE.Vector3();
+
+function createFallbackCamera() {
+  const fallback = new THREE.PerspectiveCamera(
+    36,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+
+  fallback.position.set(-12.121, 0.807, 0.593);
+  fallback.rotation.set(-0.003, -1.523, 0, 'YXZ');
+
+  return fallback;
 }
 
-const pmremGenerator = new THREE.PMREMGenerator(renderer);
-scene.environment = pmremGenerator.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+function updateRendererSize() {
+  const pixelRatioLimit = window.innerWidth < 768
+    ? CONFIG.renderer.pixelRatioMobile
+    : CONFIG.renderer.pixelRatioDesktop;
 
-const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 2000);
-camera.position.set(0, 1.7, 6);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioLimit));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
 
-const loader = new GLTFLoader();
+  if (camera) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+}
 
-let model = null;
-let basePosition = new THREE.Vector3();
-let baseQuaternion = new THREE.Quaternion();
-let targetPosition = new THREE.Vector3();
-let targetQuaternion = new THREE.Quaternion();
-let smoothPosition = new THREE.Vector3();
-let smoothQuaternion = new THREE.Quaternion();
-let generatedLights = 0;
-
-const forward = new THREE.Vector3();
-const right = new THREE.Vector3();
-const euler = new THREE.Euler(0, 0, 0, 'YXZ');
-const whiteLift = new THREE.Color(0xffffff);
-const neutralLift = new THREE.Color(0xfff3df);
+updateRendererSize();
 
 function setStatus(text, hideDelay = 1800) {
   if (!statusEl) return;
+
   statusEl.classList.remove('is-hidden');
   statusEl.textContent = text;
-  window.setTimeout(() => statusEl.classList.add('is-hidden'), hideDelay);
+
+  window.setTimeout(() => {
+    statusEl.classList.add('is-hidden');
+  }, hideDelay);
 }
 
 function getScrollProgress() {
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
   if (maxScroll <= 0) return 0;
-  return THREE.MathUtils.clamp(window.scrollY / maxScroll, 0, 1);
+  return Math.min(Math.max(window.scrollY / maxScroll, 0), 1);
 }
 
-function easeInOut(t) {
-  return t * t * (3 - 2 * t);
+function easeInOutCubic(value) {
+  return value < 0.5
+    ? 4 * value * value * value
+    : 1 - Math.pow(-2 * value + 2, 3) / 2;
 }
 
-function materialName(material) {
-  return String(material?.name || '').toLowerCase();
+function updateScrollTarget() {
+  scrollTarget = getScrollProgress();
 }
 
-function isLightMaterial(material) {
-  const name = materialName(material);
-  return name.includes('ceiling_lights') || name.includes('light') || name.includes('lamp') || name.includes('luz') || name.includes('emissive');
-}
+window.addEventListener('scroll', updateScrollTarget, { passive: true });
 
-function prepareTexture(texture, colorSpace) {
-  if (!texture) return;
-  texture.colorSpace = colorSpace;
-  texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
-  texture.needsUpdate = true;
-}
+function addSafetyLighting() {
+  if (!CONFIG.safetyLighting.enabled) return;
 
-function addGeneratedLightFromMesh(object) {
-  if (generatedLights >= CONFIG.maxGeneratedLights) return;
+  const ambient = new THREE.AmbientLight(0xffffff, CONFIG.safetyLighting.ambientIntensity);
+  ambient.name = 'web_safety_ambient_light';
+  scene.add(ambient);
 
-  const box = new THREE.Box3().setFromObject(object);
-  if (!Number.isFinite(box.min.x) || !Number.isFinite(box.max.x)) return;
-
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3());
-
-  const light = new THREE.PointLight(
-    0xffddb0,
-    CONFIG.generatedLightIntensity,
-    Math.max(CONFIG.generatedLightDistance, size.length() * 0.9)
+  const hemisphere = new THREE.HemisphereLight(
+    0xfff4dc,
+    0x24200f,
+    CONFIG.safetyLighting.hemisphereIntensity
   );
+  hemisphere.name = 'web_safety_hemisphere_light';
+  scene.add(hemisphere);
 
-  light.name = `generated_ceiling_light_${generatedLights + 1}`;
-  light.position.copy(center);
-  light.position.y -= 0.35;
-  scene.add(light);
-
-  generatedLights += 1;
+  const frontal = new THREE.DirectionalLight(0xfff2d0, CONFIG.safetyLighting.frontalIntensity);
+  frontal.name = 'web_safety_frontal_light';
+  frontal.position.set(-6, 4, 5);
+  scene.add(frontal);
 }
 
-function preserveAndFixGLBMaterials(root) {
+function normalizeImportedModel(root) {
   root.traverse((object) => {
-    if (!object.isMesh || !object.material) return;
+    if (!object.isMesh) return;
 
     object.frustumCulled = false;
     object.castShadow = false;
@@ -158,203 +170,149 @@ function preserveAndFixGLBMaterials(root) {
       object.geometry.computeBoundingBox();
     }
 
-    const materials = Array.isArray(object.material) ? object.material : [object.material];
-    const objectUsesLightMaterial = materials.some(isLightMaterial);
+    const materials = Array.isArray(object.material)
+      ? object.material
+      : [object.material];
 
     materials.forEach((material) => {
       if (!material) return;
 
-      material.side = THREE.DoubleSide;
-
-      prepareTexture(material.map, THREE.SRGBColorSpace);
-      prepareTexture(material.emissiveMap, THREE.SRGBColorSpace);
-      prepareTexture(material.normalMap, THREE.NoColorSpace);
-      prepareTexture(material.roughnessMap, THREE.NoColorSpace);
-      prepareTexture(material.metalnessMap, THREE.NoColorSpace);
-      prepareTexture(material.aoMap, THREE.NoColorSpace);
-      prepareTexture(material.lightMap, THREE.NoColorSpace);
-
-      // O GLB está escuro. Desligamos AO/lightMap em runtime para não duplicar escurecimento.
-      if (material.aoMap) {
-        material.aoMapIntensity = 0;
-      }
-      if (material.lightMap) {
-        material.lightMapIntensity = 0;
-      }
-
-      if (isLightMaterial(material)) {
-        material.color = material.color || new THREE.Color(0xffffff);
-        material.color.set(0xfff0c8);
-        material.emissive = new THREE.Color(0xffd28a);
-        material.emissiveIntensity = CONFIG.ceilingLightEmissiveIntensity;
-      } else {
-        // Lift controlado: preserva as texturas, mas tira a cena do preto.
-        if (material.color) {
-          material.color.lerp(whiteLift, CONFIG.materialBrightnessLift);
-        }
-
-        // Compensação visual para GLB/texturas baked escuros.
-        // Não altera o arquivo GLB, só deixa o background legível no navegador.
-        if (material.map) {
-          material.emissive = neutralLift.clone();
-          material.emissiveMap = material.map;
-          material.emissiveIntensity = CONFIG.textureEmissiveLift;
-        } else {
-          material.emissive = neutralLift.clone();
-          material.emissiveIntensity = CONFIG.textureEmissiveLift * 0.45;
-        }
-      }
-
-      material.roughness = Math.max(material.roughness ?? 0.82, 0.72);
-      material.metalness = material.metalness ?? 0;
-      material.envMapIntensity = Math.max(material.envMapIntensity || 0, 1.15);
       material.needsUpdate = true;
+
+      if (material.map) {
+        material.map.colorSpace = THREE.SRGBColorSpace;
+        material.map.needsUpdate = true;
+      }
+
+      if (material.emissiveMap) {
+        material.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+        material.emissiveMap.needsUpdate = true;
+      }
     });
-
-    if (objectUsesLightMaterial) {
-      addGeneratedLightFromMesh(object);
-    }
   });
 }
 
-function addSceneLights() {
-  const ambient = new THREE.HemisphereLight(0xfff7ea, 0x4a3926, 2.8);
-  ambient.name = 'realistic_visibility_ambient';
-  scene.add(ambient);
-
-  const key = new THREE.DirectionalLight(0xffead0, 2.15);
-  key.name = 'realistic_visibility_key';
-  key.position.set(6, 9, 5);
-  scene.add(key);
-
-  const fill = new THREE.DirectionalLight(0xd9e9ff, 1.2);
-  fill.name = 'realistic_visibility_fill';
-  fill.position.set(-7, 4, -5);
-  scene.add(fill);
-
-  const frontSoft = new THREE.PointLight(0xfff2db, 2.2, 36);
-  frontSoft.name = 'realistic_visibility_front_soft';
-  frontSoft.position.set(0, 2.8, 6);
-  scene.add(frontSoft);
-
-  const midSoft = new THREE.PointLight(0xffddb8, 2.4, 42);
-  midSoft.name = 'realistic_visibility_mid_soft';
-  midSoft.position.set(0, 3.4, -3.5);
-  scene.add(midSoft);
-}
-
-function getCameraFromGLB(gltf) {
-  if (gltf.cameras && gltf.cameras.length) return gltf.cameras[0];
-
-  let found = null;
-  gltf.scene.traverse((object) => {
-    if (!found && object.isCamera) found = object;
-  });
-
-  return found;
-}
-
-function syncBaseCamera(gltfCamera) {
-  const sourceCamera = gltfCamera || camera;
-
-  if (sourceCamera !== camera) {
-    camera.fov = sourceCamera.fov || 40;
-    camera.near = sourceCamera.near || 0.1;
-    camera.far = sourceCamera.far || 2000;
-    camera.aspect = window.innerWidth / window.innerHeight;
-
-    sourceCamera.updateWorldMatrix(true, false);
-    sourceCamera.getWorldPosition(basePosition);
-    sourceCamera.getWorldQuaternion(baseQuaternion);
-  } else {
-    basePosition.copy(camera.position);
-    baseQuaternion.copy(camera.quaternion);
+function getImportedCameraFromScene(gltf) {
+  if (gltf.cameras?.[0]?.isPerspectiveCamera) {
+    return gltf.cameras[0];
   }
 
-  smoothPosition.copy(basePosition);
-  smoothQuaternion.copy(baseQuaternion);
-  camera.position.copy(basePosition);
-  camera.quaternion.copy(baseQuaternion);
+  let foundCamera = null;
+
+  gltf.scene.traverse((object) => {
+    if (!foundCamera && object.isPerspectiveCamera) {
+      foundCamera = object;
+    }
+  });
+
+  return foundCamera;
+}
+
+function setupCameraFromExistingGLB(gltf) {
+  const importedCamera = getImportedCameraFromScene(gltf);
+
+  // Mantém a câmera existente do GLB. Não recria posição, rotação ou FOV.
+  camera = importedCamera || createFallbackCamera();
+
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+
+  camera.getWorldPosition(baseCameraPosition);
+  camera.getWorldQuaternion(baseCameraQuaternion);
+
+  baseCameraEuler.setFromQuaternion(baseCameraQuaternion, 'YXZ');
+  baseForward.set(0, 0, -1).applyQuaternion(baseCameraQuaternion).normalize();
+
+  activeCameraReady = true;
 }
 
-function updateCamera() {
-  const progress = getScrollProgress();
-  const turnProgress = Math.pow(progress, CONFIG.rightTurnPower);
-  const easedForward = easeInOut(progress);
+const loader = new GLTFLoader();
 
-  forward.set(0, 0, -1).applyQuaternion(baseQuaternion).normalize();
-  right.set(1, 0, 0).applyQuaternion(baseQuaternion).normalize();
+const timeout = window.setTimeout(() => {
+  if (!modelLoaded) setStatus('carregamento lento do modelo 3D', 2600);
+}, 8000);
 
-  targetPosition
-    .copy(basePosition)
-    .addScaledVector(forward, CONFIG.scrollForwardDistance * easedForward)
-    .addScaledVector(right, CONFIG.scrollRightDrift * turnProgress);
-
-  euler.setFromQuaternion(baseQuaternion, 'YXZ');
-  euler.y += CONFIG.rightTurnRadians * turnProgress;
-  targetQuaternion.setFromEuler(euler);
-
-  const time = performance.now() * 0.001 * CONFIG.wiggleSpeed;
-
-  targetPosition.x += Math.sin(time * 1.7) * CONFIG.wigglePositionStrength;
-  targetPosition.y += Math.sin(time * 1.15 + 1.8) * CONFIG.wigglePositionStrength * 0.42;
-  targetPosition.z += Math.cos(time * 1.35) * CONFIG.wigglePositionStrength * 0.55;
-
-  const wiggleQuaternion = new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(
-      Math.sin(time * 1.2) * CONFIG.wiggleRotationStrength,
-      Math.sin(time * 0.95 + 0.8) * CONFIG.wiggleRotationStrength,
-      Math.cos(time * 1.05) * CONFIG.wiggleRotationStrength * 0.55,
-      'YXZ'
-    )
-  );
-
-  targetQuaternion.multiply(wiggleQuaternion);
-
-  smoothPosition.lerp(targetPosition, CONFIG.smoothFactor);
-  smoothQuaternion.slerp(targetQuaternion, CONFIG.smoothFactor);
-
-  camera.position.copy(smoothPosition);
-  camera.quaternion.copy(smoothQuaternion);
-  camera.updateMatrixWorld();
-}
+addSafetyLighting();
+updateScrollTarget();
 
 loader.load(
   CONFIG.modelUrl,
   (gltf) => {
-    model = gltf.scene;
-    preserveAndFixGLBMaterials(model);
-    scene.add(model);
+    window.clearTimeout(timeout);
+    modelLoaded = true;
 
-    syncBaseCamera(getCameraFromGLB(gltf));
-    addSceneLights();
-    setStatus('cam.glb carregado');
+    normalizeImportedModel(gltf.scene);
+    scene.add(gltf.scene);
+
+    setupCameraFromExistingGLB(gltf);
+    updateRendererSize();
+    setStatus('cam2.glb carregado');
   },
   (event) => {
     if (!statusEl) return;
+
     if (event.total) {
-      statusEl.textContent = `carregando 3D... ${Math.round((event.loaded / event.total) * 100)}%`;
+      const progress = Math.round((event.loaded / event.total) * 100);
+      statusEl.textContent = `carregando Unidade 811... ${progress}%`;
     } else {
-      statusEl.textContent = 'carregando 3D...';
+      statusEl.textContent = 'carregando Unidade 811...';
     }
   },
   (error) => {
+    window.clearTimeout(timeout);
     console.error('Falha ao carregar cam.glb:', error);
     setStatus('modelo 3D não carregou: verifique assets/cam.glb', 4200);
   }
 );
 
+function updateCameraMotion(timeSeconds) {
+  if (!activeCameraReady || !camera) return;
+
+  scrollCurrent += (scrollTarget - scrollCurrent) * CONFIG.cameraMotion.scrollLerp;
+
+  const easedScroll = easeInOutCubic(scrollCurrent);
+  const rightTurnProgress = Math.pow(scrollCurrent, CONFIG.cameraMotion.rightTurnPower);
+
+  const wiggleSpeed = CONFIG.wiggle.speed;
+  const wigglePosition = CONFIG.wiggle.enabled ? CONFIG.wiggle.positionStrength : 0;
+  const wiggleRotation = CONFIG.wiggle.enabled ? CONFIG.wiggle.rotationStrength : 0;
+
+  const wiggleX = Math.sin(timeSeconds * wiggleSpeed * 1.7) * wigglePosition;
+  const wiggleY = Math.sin(timeSeconds * wiggleSpeed * 1.1 + 1.8) * wigglePosition * 0.55;
+  const wiggleZ = Math.cos(timeSeconds * wiggleSpeed * 1.4 + 0.6) * wigglePosition * 0.65;
+
+  tempVector.set(wiggleX, wiggleY, wiggleZ);
+
+  tempPosition
+    .copy(baseCameraPosition)
+    .addScaledVector(baseForward, CONFIG.cameraMotion.forwardDistance * easedScroll)
+    .add(tempVector);
+
+  tempEuler.set(
+    baseCameraEuler.x + Math.sin(timeSeconds * wiggleSpeed * 1.23) * wiggleRotation,
+    baseCameraEuler.y + CONFIG.cameraMotion.rightTurnRadians * rightTurnProgress + Math.sin(timeSeconds * wiggleSpeed * 0.97) * wiggleRotation,
+    baseCameraEuler.z + Math.cos(timeSeconds * wiggleSpeed * 1.11) * wiggleRotation * 0.7,
+    'YXZ'
+  );
+
+  camera.position.copy(tempPosition);
+  camera.rotation.copy(tempEuler);
+}
+
 function animate() {
   requestAnimationFrame(animate);
-  updateCamera();
-  renderer.render(scene, camera);
+
+  const timeSeconds = performance.now() * 0.001;
+  updateCameraMotion(timeSeconds);
+
+  if (camera) {
+    renderer.render(scene, camera);
+  }
 }
 
 animate();
 
 window.addEventListener('resize', () => {
-  setRendererSize();
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+  updateRendererSize();
+  updateScrollTarget();
 });

@@ -1,9 +1,12 @@
 #scene {
-  filter: contrast(1.02) saturate(1) brightness(1.08);
+  filter: none;
 }
 
+.scene-wrapper::before,
 .scene-wrapper::after,
+.three-background::before,
 .three-background::after,
+.hero::before,
 .hero::after {
-  content: none !important;
+  pointer-events: none;
 }
