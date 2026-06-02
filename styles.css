@@ -3373,3 +3373,63 @@ body.usage-modal-open {
     line-height: 1.56 !important;
   }
 }
+
+
+/* === Ajuste fino solicitado: hierarquia textual, ênfase e centralização === */
+.usage-heading-centered .eyebrow {
+  font-size: 12px !important;
+  letter-spacing: .28em !important;
+}
+
+.usage-heading-centered h2 {
+  max-width: 980px !important;
+  font-size: clamp(30px, 4.2vw, 58px) !important;
+  line-height: .96 !important;
+  letter-spacing: -.08em !important;
+  text-transform: uppercase !important;
+}
+
+.usage-heading-centered > p:not(.eyebrow) {
+  max-width: 760px !important;
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  color: rgba(244, 238, 217, 0.78) !important;
+}
+
+.usage-heading-centered .usage-emphasis {
+  display: inline;
+  color: #fff;
+  font-weight: 700;
+  text-shadow:
+    0 0 8px rgba(255,255,255,.18),
+    0 0 24px rgba(216,192,92,.18),
+    0 0 40px rgba(216,192,92,.10);
+}
+
+.usage-card {
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.usage-card h3,
+.usage-card small,
+.usage-card p {
+  width: 100%;
+  text-align: center !important;
+  align-self: center;
+}
+
+.usage-card p {
+  max-width: 94% !important;
+}
+
+@media (max-width: 760px) {
+  .usage-heading-centered h2 {
+    font-size: clamp(30px, 9vw, 44px) !important;
+  }
+
+  .usage-heading-centered > p:not(.eyebrow) {
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+  }
+}
