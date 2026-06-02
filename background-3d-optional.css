@@ -1,7 +1,7 @@
 /* PATCH — BLOOM BEM LEVE + OVERLAY #202020 50% + RUÍDO */
 
 #scene {
-  filter: blur(3.2px) contrast(0.98) saturate(0.74) brightness(0.56) !important;
+  filter: blur(3.2px) contrast(0.98) saturate(0.74) brightness(0.68) !important;
   opacity: 1 !important;
   transform: scale(1.02);
   transform-origin: center center;
@@ -412,4 +412,14 @@
     max-height: 62vh !important;
     object-fit: contain !important;
   }
+}
+
+
+/* =========================================================
+   PATCH — CANVAS 3D MAIS VISÍVEL
+   Aumenta levemente a luminosidade do fundo 3D sem mexer no GLB.
+   ========================================================= */
+
+#scene {
+  filter: blur(3.2px) contrast(0.98) saturate(0.78) brightness(0.68) !important;
 }
