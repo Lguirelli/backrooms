@@ -256,12 +256,32 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.classList.remove('usage-modal-open');
     };
 
+    let lastUsageClickIndex = null;
+    let lastUsageClickAt = 0;
+
     usageCards.forEach((card, index) => {
       card.addEventListener('click', (event) => {
         event.stopPropagation();
+
+        const now = performance.now();
+        const isSecondClick = lastUsageClickIndex === index && now - lastUsageClickAt < 420;
+
         if (!card.classList.contains('is-center')) {
           goToUsageCard(index);
+          lastUsageClickIndex = index;
+          lastUsageClickAt = now;
+          return;
         }
+
+        if (isSecondClick) {
+          openUsageReport(card);
+          lastUsageClickIndex = null;
+          lastUsageClickAt = 0;
+          return;
+        }
+
+        lastUsageClickIndex = index;
+        lastUsageClickAt = now;
       });
 
       card.addEventListener('dblclick', (event) => {
@@ -269,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.stopPropagation();
         if (!card.classList.contains('is-center')) {
           goToUsageCard(index);
-          window.setTimeout(() => openUsageReport(card), 180);
+          window.setTimeout(() => openUsageReport(card), 160);
           return;
         }
         openUsageReport(card);

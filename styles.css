@@ -3216,3 +3216,160 @@ body.usage-modal-open {
     --card-opacity: 0;
   }
 }
+
+/* === Ajustes finais solicitados: seção global, cards glass e modal compacto === */
+.usage-section {
+  overflow: hidden;
+}
+
+.usage-panel {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  border-radius: 0 !important;
+  min-height: clamp(600px, 68vw, 760px) !important;
+  padding: clamp(18px, 3vw, 34px) 0 clamp(42px, 6vw, 72px) !important;
+}
+
+.usage-panel::before,
+.usage-panel::after {
+  display: none !important;
+}
+
+.usage-heading-centered {
+  width: min(900px, 100%);
+  margin: 0 auto clamp(34px, 5vw, 58px) !important;
+  text-align: center;
+}
+
+.usage-heading-centered > p:not(.eyebrow) {
+  max-width: 640px;
+}
+
+.usage-carousel {
+  height: clamp(300px, 29vw, 380px) !important;
+}
+
+.usage-card {
+  width: clamp(245px, 22vw, 326px) !important;
+  min-height: clamp(210px, 17vw, 260px) !important;
+  padding: clamp(22px, 2.4vw, 30px) !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  border: 1px solid rgba(244, 238, 217, 0.17) !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle at 82% 8%, rgba(145, 119, 190, 0.16), transparent 42%),
+    radial-gradient(circle at 18% 92%, rgba(216, 192, 92, 0.09), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.105), rgba(35, 34, 41, 0.72) 44%, rgba(12, 12, 11, 0.76)) !important;
+  box-shadow:
+    0 22px 72px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13) !important;
+}
+
+.usage-card::before {
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.13), transparent 34%, transparent 68%, rgba(216, 192, 92, 0.04)) !important;
+  opacity: 0.48 !important;
+}
+
+.usage-card::after {
+  inset: 9px !important;
+  border-color: rgba(244, 238, 217, 0.07) !important;
+}
+
+.usage-card h3 {
+  font-size: clamp(1.45rem, 2.25vw, 2.15rem) !important;
+  line-height: 0.96 !important;
+  margin: 0 !important;
+}
+
+.usage-card small {
+  color: rgba(244, 238, 217, 0.66) !important;
+  font-size: 0.76rem !important;
+  line-height: 1.35 !important;
+}
+
+.usage-card p {
+  margin: 8px auto 0 !important;
+  max-width: 88% !important;
+  font-size: 0.86rem !important;
+  line-height: 1.45 !important;
+}
+
+.usage-card.is-center {
+  --card-scale: 1.1;
+  --card-depth: 170px;
+  border-color: rgba(244, 238, 217, 0.34) !important;
+  background:
+    radial-gradient(circle at 82% 6%, rgba(155, 117, 189, 0.22), transparent 42%),
+    radial-gradient(circle at 18% 92%, rgba(216, 192, 92, 0.12), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(45, 44, 52, 0.80) 45%, rgba(13, 13, 12, 0.84)) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 34px 96px rgba(0, 0, 0, 0.58),
+    0 0 42px rgba(216, 192, 92, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.usage-modal-card {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(244, 238, 217, 0.26) transparent;
+}
+
+.usage-modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.usage-modal-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.usage-modal-card::-webkit-scrollbar-thumb {
+  background: rgba(244, 238, 217, 0.20);
+  border-radius: 999px;
+}
+
+.usage-modal-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 238, 217, 0.30);
+}
+
+#usageModalEyebrow {
+  color: rgba(216, 192, 92, 0.86);
+}
+
+.usage-modal-body {
+  display: block !important;
+  gap: 0 !important;
+  margin-top: 24px !important;
+  padding-top: 22px !important;
+}
+
+.usage-modal-body p {
+  margin: 0 0 10px !important;
+  line-height: 1.62 !important;
+}
+
+.usage-modal-body p:last-child {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 760px) {
+  .usage-panel {
+    min-height: 620px !important;
+    padding-inline: 0 !important;
+  }
+
+  .usage-carousel {
+    height: 350px !important;
+  }
+
+  .usage-card {
+    min-height: 230px !important;
+  }
+
+  .usage-modal-body p {
+    line-height: 1.56 !important;
+  }
+}
