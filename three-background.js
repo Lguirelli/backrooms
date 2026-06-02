@@ -46,7 +46,12 @@ const CONFIG = {
     rightTurnRadians: -0.54,
     rightTurnPower: 1.32,
 
-    arcStrength: 1.05,
+    // A câmera recua para a esquerda no começo e só depois abre para a direita.
+    // Isso evita atravessar a parede no meio do scroll.
+    arcLeftAvoidanceStrength: 0.86,
+    arcLeftAvoidanceEnd: 0.38,
+    arcRightStrength: 1.18,
+    arcRightStart: 0.26,
     arcVerticalStrength: 0.12,
 
     lensBreathingStrength: 0.42,
@@ -227,6 +232,11 @@ function updateMouseCameraInfluence() {
   mouse.currentY += (mouse.targetY - mouse.currentY) * CONFIG.camera.mouseEase;
 }
 
+function smoothstep(edge0, edge1, value) {
+  const t = Math.min(Math.max((value - edge0) / Math.max(edge1 - edge0, 0.00001), 0), 1);
+  return t * t * (3 - 2 * t);
+}
+
 function updatePostFromScroll(scroll) {
   if (!CONFIG.post.enabled) return;
 
@@ -261,8 +271,16 @@ function updateCameraFromScrollAndMouse() {
 
   const moveForward = forward.clone().multiplyScalar(eased * CONFIG.camera.scrollForwardDistance);
 
-  // Movimento em arco leve.
-  const arc = Math.sin(scroll * Math.PI) * CONFIG.camera.arcStrength;
+  // Movimento em arco leve com desvio inicial para a esquerda.
+  // Fase 1: desloca para a esquerda para não atravessar a parede.
+  // Fase 2: volta ao centro e abre progressivamente para a direita.
+  const leftPhase = Math.min(scroll / CONFIG.camera.arcLeftAvoidanceEnd, 1);
+  const leftAvoidance = -Math.sin(leftPhase * Math.PI) * CONFIG.camera.arcLeftAvoidanceStrength;
+
+  const rightPhase = smoothstep(CONFIG.camera.arcRightStart, 1, scroll);
+  const rightArc = rightPhase * CONFIG.camera.arcRightStrength;
+
+  const arc = leftAvoidance + rightArc;
   const arcVertical = Math.sin(scroll * Math.PI) * CONFIG.camera.arcVerticalStrength;
   const moveArc = right.clone().multiplyScalar(arc).add(up.clone().multiplyScalar(arcVertical));
 
