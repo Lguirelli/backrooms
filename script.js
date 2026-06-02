@@ -192,8 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (usageCarousel && usageCards.length) {
     let position = 0;
-    let velocity = 0.18;
-    let targetVelocity = 0.18;
+    let velocity = 0.0065;
+    let targetVelocity = 0.0065;
     let lastTime = performance.now();
     let pointerDown = false;
 
@@ -204,9 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderUsageCarousel = (time) => {
-      const delta = Math.min(40, time - lastTime) / 16.67;
+      const delta = Math.min(50, time - lastTime);
       lastTime = time;
-      velocity += (targetVelocity - velocity) * 0.055;
+      velocity += (targetVelocity - velocity) * 0.08;
       position += velocity * delta;
 
       const total = usageCards.length;
@@ -217,17 +217,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const distance = Math.abs(offset);
         const clamped = Math.min(distance, 4.2);
         const x = offset * spread;
-        const scale = Math.max(0.68, 1 - clamped * 0.105);
-        const opacity = Math.max(0.14, 1 - clamped * 0.22);
-        const blur = Math.min(7, clamped * 1.7);
-        const rotate = Math.max(-18, Math.min(18, offset * -5));
-        const depth = -clamped * 70;
+        const isCenter = distance < 0.42;
+        const scale = Math.max(0.66, 1.08 - clamped * 0.12);
+        const opacity = Math.max(0.12, 1 - clamped * 0.25);
+        const blur = Math.min(7.5, clamped * 1.9);
+        const rotate = Math.max(-20, Math.min(20, offset * -6));
+        const depth = isCenter ? 150 : -clamped * 92;
+        const y = isCenter ? '-54%' : '-50%';
 
-        card.style.transform = `translate3d(calc(-50% + ${x}px), -50%, ${depth}px) scale(${scale}) rotateY(${rotate}deg)`;
+        card.classList.toggle('is-center', isCenter);
+        card.classList.toggle('is-distant', distance >= 2.75);
+        card.style.transform = `translate3d(calc(-50% + ${x}px), ${y}, ${depth}px) scale(${scale}) rotateY(${rotate}deg)`;
         card.style.opacity = opacity.toFixed(3);
         card.style.filter = `blur(${blur.toFixed(2)}px)`;
-        card.style.zIndex = String(100 - Math.round(clamped * 10));
-        card.style.pointerEvents = distance < 2.65 ? 'auto' : 'none';
+        card.style.zIndex = String(1000 - Math.round(clamped * 100));
+        card.style.pointerEvents = distance < 2.75 ? 'auto' : 'none';
       });
 
       window.requestAnimationFrame(renderUsageCarousel);
@@ -236,26 +240,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateVelocityFromPointer = (clientX) => {
       const rect = usageCarousel.getBoundingClientRect();
       const normalized = ((clientX - rect.left) / rect.width - 0.5) * 2;
-      const deadZone = Math.abs(normalized) < 0.18;
-      const intensity = deadZone ? 0 : Math.pow(Math.abs(normalized), 1.35);
+      const deadZone = Math.abs(normalized) < 0.2;
+      const intensity = deadZone ? 0 : Math.pow(Math.abs(normalized), 1.25);
       const direction = normalized >= 0 ? 1 : -1;
-      targetVelocity = deadZone ? 0.08 : direction * (0.12 + intensity * (pointerDown ? 0.85 : 0.42));
+      targetVelocity = deadZone ? 0.0065 : direction * (0.005 + intensity * (pointerDown ? 0.027 : 0.016));
     };
 
     usageCarousel.addEventListener('pointermove', (event) => updateVelocityFromPointer(event.clientX));
     usageCarousel.addEventListener('pointerenter', (event) => updateVelocityFromPointer(event.clientX));
     usageCarousel.addEventListener('pointerleave', () => {
       pointerDown = false;
-      targetVelocity = 0.18;
+      targetVelocity = 0.0065;
     });
     usageCarousel.addEventListener('pointerdown', (event) => {
       pointerDown = true;
+      usageCarousel.classList.add('is-dragging');
       usageCarousel.setPointerCapture?.(event.pointerId);
       updateVelocityFromPointer(event.clientX);
     });
     usageCarousel.addEventListener('pointerup', (event) => {
       pointerDown = false;
+      usageCarousel.classList.remove('is-dragging');
       updateVelocityFromPointer(event.clientX);
+    });
+    usageCarousel.addEventListener('pointercancel', () => {
+      pointerDown = false;
+      usageCarousel.classList.remove('is-dragging');
+      targetVelocity = 0.0065;
     });
 
     usageCards.forEach((card) => {
@@ -289,14 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    if (!prefersReducedMotion) {
-      window.requestAnimationFrame(renderUsageCarousel);
-    } else {
-      usageCards.forEach((card, index) => {
-        card.style.transform = `translate3d(calc(-50% + ${(index - 1) * 290}px), -50%, 0)`;
-        card.style.opacity = index < 3 ? '1' : '.24';
-      });
-    }
+    window.requestAnimationFrame(renderUsageCarousel);
   }
 
 });
