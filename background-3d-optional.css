@@ -1,15 +1,29 @@
+/* =========================================================
+   BACKGROUND 3D OPTIONAL CSS — CAM1
+   Use apenas se seu projeto importar este arquivo.
+   Não aplica filtro, vinheta, blur ou overlay sobre o GLB.
+   ========================================================= */
+
 #scene {
   filter: none !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
 }
 
-.scene-depth,
-.scene-gradient,
-.scene-vignette,
 .scene-wrapper::before,
 .scene-wrapper::after,
 .three-background::before,
 .three-background::after,
-.hero::before,
-.hero::after {
+.background-3d::before,
+.background-3d::after,
+.scene-depth,
+.scene-gradient,
+.scene-vignette,
+.scene-scanlines,
+.scanlines,
+.vignette {
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }

@@ -1132,3 +1132,41 @@ a {
     letter-spacing: 0.12em;
   }
 }
+
+
+/* =========================================================
+   3D BACKGROUND MATERIAL SAFETY OVERRIDES
+   Mantém o GLB visível sem filtros/overlays quebrando os materiais.
+   ========================================================= */
+
+#scene {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
+}
+
+.scene-wrapper,
+.three-background,
+.scene-layer,
+.background-3d {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.scene-wrapper::before,
+.scene-wrapper::after,
+.three-background::before,
+.three-background::after,
+.background-3d::before,
+.background-3d::after,
+.scene-depth,
+.scene-gradient,
+.scene-vignette,
+.scene-scanlines,
+.scanlines,
+.vignette {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
