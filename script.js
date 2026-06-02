@@ -192,8 +192,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (usageCarousel && usageCards.length) {
     let position = 0;
-    let velocity = 0.0065;
-    let targetVelocity = 0.0065;
+    const baseVelocity = 0.00038;
+    const pointerVelocity = 0.0014;
+    const pointerBoostVelocity = 0.0042;
+    let velocity = baseVelocity;
+    let targetVelocity = baseVelocity;
     let lastTime = performance.now();
     let pointerDown = false;
 
@@ -206,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderUsageCarousel = (time) => {
       const delta = Math.min(50, time - lastTime);
       lastTime = time;
-      velocity += (targetVelocity - velocity) * 0.08;
+      velocity += (targetVelocity - velocity) * 0.035;
       position += velocity * delta;
 
       const total = usageCards.length;
@@ -243,14 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const deadZone = Math.abs(normalized) < 0.2;
       const intensity = deadZone ? 0 : Math.pow(Math.abs(normalized), 1.25);
       const direction = normalized >= 0 ? 1 : -1;
-      targetVelocity = deadZone ? 0.0065 : direction * (0.005 + intensity * (pointerDown ? 0.027 : 0.016));
+      targetVelocity = deadZone ? baseVelocity : direction * (pointerVelocity + intensity * (pointerDown ? pointerBoostVelocity : 0.0024));
     };
 
     usageCarousel.addEventListener('pointermove', (event) => updateVelocityFromPointer(event.clientX));
     usageCarousel.addEventListener('pointerenter', (event) => updateVelocityFromPointer(event.clientX));
     usageCarousel.addEventListener('pointerleave', () => {
       pointerDown = false;
-      targetVelocity = 0.0065;
+      targetVelocity = baseVelocity;
     });
     usageCarousel.addEventListener('pointerdown', (event) => {
       pointerDown = true;
@@ -266,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
     usageCarousel.addEventListener('pointercancel', () => {
       pointerDown = false;
       usageCarousel.classList.remove('is-dragging');
-      targetVelocity = 0.0065;
+      targetVelocity = baseVelocity;
     });
 
     usageCards.forEach((card) => {
