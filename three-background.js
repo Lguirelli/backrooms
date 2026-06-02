@@ -7,7 +7,7 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/
    - Carrega apenas assets/cam.glb.
    - Mantém texturas e materiais originais do GLB.
    - Usa a câmera embutida do GLB como ponto inicial.
-   - No scroll: avança para frente e gira levemente para a direita.
+   - No scroll: avança para frente e aumenta a rotação para a direita progressivamente, com wiggle sutil constante.
    ========================================================= */
 
 const MODEL_URL = './assets/cam.glb';
@@ -24,9 +24,20 @@ const CONFIG = {
     near: 0.05,
     far: 2000,
     forwardDistance: 8.5,
-    rightTurnRadians: -0.28,
+
+    // Rotação para a direita mais forte e progressiva no scroll.
+    // Valor negativo mantém a direção atual do projeto.
+    rightTurnRadians: -0.82,
+    rightTurnPower: 1.35,
+
     verticalDrift: 0.04,
-    smoothing: 0.08
+    smoothing: 0.08,
+
+    // Wiggle constante, sutil e orgânico.
+    wiggleEnabled: true,
+    wigglePositionStrength: 0.018,
+    wiggleRotationStrength: 0.006,
+    wiggleSpeed: 0.85
   },
   lights: {
     // Luzes neutras de visualização. Não trocam material nem textura do GLB.
@@ -233,9 +244,16 @@ function updateTargetScrollProgress() {
   targetScrollProgress = getScrollProgress();
 }
 
-function applyScrollCamera(progress) {
+function applyScrollCamera(progress, elapsedSeconds = performance.now() * 0.001) {
   const forward = CONFIG.camera.forwardDistance * progress;
-  const yawRight = CONFIG.camera.rightTurnRadians * progress;
+
+  // A curva faz a rotação começar leve e ficar mais forte no final da página.
+  const rotationProgress = Math.pow(
+    THREE.MathUtils.clamp(progress, 0, 1),
+    CONFIG.camera.rightTurnPower
+  );
+  const yawRight = CONFIG.camera.rightTurnRadians * rotationProgress;
+
   const driftY = CONFIG.camera.verticalDrift * Math.sin(progress * Math.PI);
 
   activeCamera.position.copy(baseCameraPosition);
@@ -248,7 +266,41 @@ function applyScrollCamera(progress) {
   );
 
   activeCamera.quaternion.copy(baseCameraQuaternion).multiply(localRightTurn);
+
+  if (CONFIG.camera.wiggleEnabled) {
+    applyCameraWiggle(elapsedSeconds, progress);
+  }
+
   activeCamera.updateMatrixWorld(true);
+}
+
+function applyCameraWiggle(elapsedSeconds, progress) {
+  const speed = CONFIG.camera.wiggleSpeed;
+
+  // O wiggle aumenta um pouco com o scroll, mas continua sutil.
+  const scrollInfluence = 0.72 + progress * 0.38;
+  const positionStrength = CONFIG.camera.wigglePositionStrength * scrollInfluence;
+  const rotationStrength = CONFIG.camera.wiggleRotationStrength * scrollInfluence;
+
+  const t = elapsedSeconds * speed;
+
+  const offsetX = Math.sin(t * 1.7) * positionStrength;
+  const offsetY = Math.sin(t * 1.13 + 1.8) * positionStrength * 0.55;
+  const offsetZ = Math.sin(t * 0.91 + 0.6) * positionStrength * 0.45;
+
+  activeCamera.translateX(offsetX);
+  activeCamera.translateY(offsetY);
+  activeCamera.translateZ(offsetZ);
+
+  const wiggleEuler = new THREE.Euler(
+    Math.sin(t * 1.21 + 2.1) * rotationStrength * 0.55,
+    Math.sin(t * 1.47 + 0.4) * rotationStrength,
+    Math.sin(t * 0.83 + 1.2) * rotationStrength * 0.38,
+    'YXZ'
+  );
+
+  const wiggleQuaternion = new THREE.Quaternion().setFromEuler(wiggleEuler);
+  activeCamera.quaternion.multiply(wiggleQuaternion);
 }
 
 function animate() {
@@ -266,7 +318,7 @@ function animate() {
     CONFIG.camera.smoothing
   );
 
-  applyScrollCamera(currentScrollProgress);
+  applyScrollCamera(currentScrollProgress, now * 0.001);
   renderer.render(scene, activeCamera);
 }
 
