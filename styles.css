@@ -3488,57 +3488,75 @@ body.usage-modal-open {
 }
 
 
-/* === Ajuste mobile: remover margem de segurança e corte bruto do carrossel === */
+/* === Correção mobile: modal de relato abrir corretamente na viewport === */
 @media (max-width: 760px) {
-  .usage-section {
-    overflow: visible !important;
+  .usage-modal {
+    padding: 12px !important;
+    place-items: end center !important;
+    align-items: end !important;
   }
 
-  .usage-panel.max-wrap,
-  .usage-panel {
-    width: 100vw !important;
+  .usage-modal-card {
+    width: calc(100vw - 24px) !important;
     max-width: none !important;
-    margin-left: calc(50% - 50vw) !important;
-    margin-right: calc(50% - 50vw) !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    overflow: visible !important;
+    max-height: calc(100dvh - 24px) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 22px 18px 18px !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
-  .usage-heading-centered {
-    width: min(88vw, 420px) !important;
-    max-width: 88vw !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+  .usage-modal-card::after {
+    inset: 10px !important;
+    border-radius: 18px !important;
   }
 
-  .usage-carousel {
-    width: 100vw !important;
-    max-width: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    overflow: visible !important;
-    clip-path: none !important;
-    mask-image: none !important;
-    -webkit-mask-image: none !important;
+  .usage-modal-close {
+    position: absolute !important;
+    top: 14px !important;
+    right: 14px !important;
+    float: none !important;
+    width: 40px !important;
+    height: 40px !important;
   }
 
-  .usage-track {
-    overflow: visible !important;
+  #usageModalEyebrow {
+    padding-right: 54px !important;
   }
 
-  .usage-card {
-    width: min(56vw, 232px) !important;
-    min-height: 202px !important;
+  .usage-modal-card h2 {
+    max-width: calc(100% - 16px) !important;
+    margin-top: 8px !important;
+    font-size: clamp(2rem, 10vw, 2.8rem) !important;
+    line-height: .94 !important;
   }
 
-  .usage-card.is-left {
-    --card-x: -34vw !important;
-    --card-opacity: 0.38 !important;
+  .usage-modal-role {
+    max-width: 100% !important;
+    margin-top: 10px !important;
+    font-size: 0.92rem !important;
+    line-height: 1.45 !important;
   }
 
-  .usage-card.is-right {
-    --card-x: 34vw !important;
-    --card-opacity: 0.38 !important;
+  .usage-modal-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    margin-top: 18px !important;
+    padding-top: 18px !important;
+    padding-right: 4px !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .usage-modal-body p {
+    max-width: 100% !important;
+    font-size: 0.98rem !important;
+    line-height: 1.58 !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
   }
 }
