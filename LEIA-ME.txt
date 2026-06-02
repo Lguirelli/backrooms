@@ -1,0 +1,50 @@
+PATCH — CAM1 CORRIGIDO
+
+Substituir no repositório:
+
+- index.html
+- three-background.js
+- styles.css
+- src/styles.css
+- background-3d-optional.css
+- assets/cam.glb
+
+Correções:
+
+1. Volta para o cam1.glb.
+2. Adiciona cache busting no caminho do GLB para evitar o navegador puxar o cam2 antigo.
+3. Preserva os materiais originais:
+   - não clona material
+   - não troca textura
+   - não altera emissive
+   - não altera roughness/metalness
+   - não altera normal map
+   - não altera AO map
+   - não altera flipY/colorSpace
+4. Remove overlays e filtros que afetavam a leitura visual do GLB:
+   - scene-depth
+   - scene-gradient
+   - scene-vignette
+   - scanlines
+   - noise
+   - grid-bg
+5. Recupera movimento de câmera por scroll:
+   - avanço para frente
+   - rotação progressiva para direita
+   - movimento em arco leve
+   - respiração de lente
+6. Wiggle agora vem do movimento do mouse:
+   - não existe wiggle automático constante
+   - o mouse gera parallax/instabilidade leve
+7. Mantém luzes do GLB e adiciona luzes externas leves de reforço.
+
+Controles principais no topo do three-background.js:
+
+CONFIG.camera.scrollForwardDistance
+CONFIG.camera.rightTurnRadians
+CONFIG.camera.arcStrength
+CONFIG.camera.lensBreathingStrength
+CONFIG.camera.mousePositionStrength
+CONFIG.camera.mouseRotationStrength
+CONFIG.camera.mouseVelocityStrength
+CONFIG.exposure
