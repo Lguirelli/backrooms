@@ -259,3 +259,157 @@
     line-height: 1.4 !important;
   }
 }
+
+
+/* =========================================================
+   PATCH — MOBILE PLANTA: TÍTULO ANTES DO BOX + CENTRALIZAÇÃO
+   ========================================================= */
+
+/* Desktop mantém o título original dentro da coluna de texto */
+.plan-mobile-eyebrow {
+  display: none;
+}
+
+/* Mobile em pé: "Planta de implantação" aparece antes do box */
+@media (max-width: 760px) {
+  #plan .plan-panel-real {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 20px !important;
+    width: 100% !important;
+  }
+
+  #plan .plan-mobile-eyebrow {
+    display: block !important;
+    order: 1 !important;
+    width: 100% !important;
+    margin: 0 auto 2px !important;
+    text-align: center !important;
+  }
+
+  #plan .site-plan-card {
+    order: 2 !important;
+    width: 100% !important;
+    margin-inline: auto !important;
+  }
+
+  #plan .plan-copy {
+    order: 3 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: auto !important;
+    text-align: center !important;
+    justify-items: center !important;
+    align-items: center !important;
+  }
+
+  /* esconde o título duplicado dentro do texto no mobile */
+  #plan .plan-copy > .eyebrow {
+    display: none !important;
+  }
+
+  #plan .plan-copy h2,
+  #plan .plan-copy > p {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  #plan .plan-list {
+    width: min(100%, 560px) !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  #plan .inline-btn {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* Celular deitado: mantém título -> box -> texto e remove a margem que puxava o texto para a esquerda */
+@media (max-height: 520px) and (orientation: landscape) {
+  #plan .plan-panel-real {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 18px !important;
+    width: 100% !important;
+  }
+
+  #plan .plan-mobile-eyebrow {
+    display: block !important;
+    order: 1 !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  #plan .site-plan-card {
+    order: 2 !important;
+    width: min(100%, 720px) !important;
+    margin-inline: auto !important;
+    grid-column: auto !important;
+  }
+
+  #plan .plan-copy {
+    order: 3 !important;
+    width: min(100%, 720px) !important;
+    max-width: 720px !important;
+    margin-inline: auto !important;
+    align-content: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    text-align: center !important;
+    grid-column: auto !important;
+  }
+
+  #plan .plan-copy > .eyebrow {
+    display: none !important;
+  }
+
+  #plan .plan-copy h2 {
+    width: 100% !important;
+    max-width: 680px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+    font-size: clamp(24px, 6vw, 38px) !important;
+  }
+
+  #plan .plan-copy > p {
+    width: 100% !important;
+    max-width: 640px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  #plan .plan-list {
+    width: min(100%, 620px) !important;
+    max-width: 620px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  #plan .plan-list div {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #plan .inline-btn {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  #plan .site-plan-frame img {
+    max-height: 62vh !important;
+    object-fit: contain !important;
+  }
+}
