@@ -260,3 +260,42 @@ h2,
   letter-spacing: 0.115em !important;
   word-spacing: 0.045em !important;
 }
+
+
+/* =========================================================
+   PATCH — TÍTULOS CENTRALIZADOS E GLOW MAIS FORTE
+   ========================================================= */
+
+/* Centraliza o texto introdutório e o título da seção de benefícios */
+.narrative-strip,
+.narrative-strip p,
+.section-heading.experience-heading.benefits-heading-center,
+.section-heading.experience-heading.benefits-heading-center h2 {
+  text-align: center !important;
+  justify-items: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.narrative-strip p {
+  max-width: 920px !important;
+}
+
+/* Glow mais forte em todos os títulos */
+h1,
+h2,
+h3,
+.display,
+.hero-title,
+.section-heading h2,
+.benefit-card h3,
+.possibility-caption strong,
+.site-plan-toolbar,
+.nav-logo,
+.brand-mark {
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.22),
+    0 0 24px rgba(247, 241, 223, 0.18),
+    0 0 48px rgba(216, 192, 92, 0.22),
+    0 0 88px rgba(216, 192, 92, 0.10) !important;
+}

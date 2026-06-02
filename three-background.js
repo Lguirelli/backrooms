@@ -3,6 +3,7 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/
 import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/RenderPass.js';
 import { BokehPass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/BokehPass.js';
+import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 /*
   BACKGROUND 3D — CAM1 COM CÂMERA RESTAURADA
@@ -80,7 +81,15 @@ const CONFIG = {
     // Depth of field solicitado.
     dofAperture: 1.2,
     dofFocus: 17.5,
-    dofMaxBlur: 0.0048
+    dofMaxBlur: 0.0048,
+
+    // Bloom para as superfícies emissivas do GLB.
+    bloomStrength: 0.62,
+    bloomRadius: 0.72,
+    bloomThreshold: 0.36,
+
+    // Realce do material Ceiling_Lights.
+    ceilingLightsEmissiveIntensity: 4.4
   }
 };
 
@@ -133,6 +142,13 @@ const bokehPass = new BokehPass(scene, camera, {
   height: window.innerHeight
 });
 
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  CONFIG.post.bloomStrength,
+  CONFIG.post.bloomRadius,
+  CONFIG.post.bloomThreshold
+);
+
 const composer = new EffectComposer(renderer);
 composer.setPixelRatio(getPixelRatio());
 composer.setSize(window.innerWidth, window.innerHeight);
@@ -140,6 +156,7 @@ composer.addPass(renderPass);
 
 if (CONFIG.post.enabled) {
   composer.addPass(bokehPass);
+  composer.addPass(bloomPass);
 }
 
 const ambient = new THREE.HemisphereLight(0xffffff, 0x2a2418, CONFIG.lights.ambientIntensity);
@@ -219,9 +236,7 @@ function preserveOriginalGLBMaterials(root) {
 
       const materialName = String(material.name || '').toLowerCase();
 
-      // Correção pontual solicitada:
-      // GreenSkirting estava com leitura levemente emissiva.
-      // Mantém o material original, mas remove emissão e deixa fosco.
+      // GreenSkirting: remove emissão e deixa mais fosco.
       if (materialName.includes('greenskirting')) {
         if (material.emissive) {
           material.emissive.set(0x000000);
@@ -231,6 +246,47 @@ function preserveOriginalGLBMaterials(root) {
         material.emissiveMap = null;
         material.metalness = 0;
         material.roughness = 0.96;
+      }
+
+      // Ceiling_Lights: bloom mais presente e centro mais branco.
+      if (materialName.includes('ceiling_lights') || materialName.includes('ceilinglights')) {
+        if (material.color) {
+          material.color.set(0xfff0c8);
+        }
+
+        if (material.emissive) {
+          material.emissive.set(0xffd89b);
+        }
+
+        material.emissiveIntensity = CONFIG.post.ceilingLightsEmissiveIntensity;
+        material.metalness = 0;
+        material.roughness = 0.28;
+        material.toneMapped = true;
+
+        if (!material.userData.__backroomsLightPatched) {
+          material.onBeforeCompile = (shader) => {
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <common>',
+              `#include <common>
+               float backroomsCenterGlow(vec3 normal, vec3 viewDir) {
+                 return pow(max(dot(normalize(normal), normalize(viewDir)), 0.0), 3.6);
+               }`
+            );
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <dithering_fragment>',
+              `
+              float backroomsFacing = backroomsCenterGlow(normal, -vViewPosition);
+              vec3 backroomsWarmCore = mix(vec3(1.0), vec3(1.0, 0.93, 0.82), 0.45);
+              gl_FragColor.rgb += backroomsWarmCore * (0.18 + backroomsFacing * 0.75);
+              #include <dithering_fragment>
+              `
+            );
+          };
+
+          material.customProgramCacheKey = () => 'backrooms-ceiling-lights-centerwhite-v2';
+          material.userData.__backroomsLightPatched = true;
+        }
       }
 
       material.needsUpdate = true;
@@ -406,6 +462,10 @@ window.addEventListener('resize', () => {
 
   composer.setPixelRatio(pixelRatio);
   composer.setSize(window.innerWidth, window.innerHeight);
+
+  if (bloomPass && typeof bloomPass.setSize === 'function') {
+    bloomPass.setSize(window.innerWidth, window.innerHeight);
+  }
 
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
