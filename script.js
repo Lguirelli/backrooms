@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const usageCarousel = document.getElementById('usageCarousel');
+  const usageTrack = document.getElementById('usageTrack');
   const usageCards = Array.from(document.querySelectorAll('.usage-card'));
   const usageModal = document.getElementById('usageModal');
   const usageModalTitle = document.getElementById('usageModalTitle');
@@ -191,121 +192,147 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeUsageModalButtons = Array.from(document.querySelectorAll('[data-close-usage-modal]'));
 
   if (usageCarousel && usageCards.length) {
-    let position = 0;
-    const baseVelocity = 0.00038;
-    const pointerVelocity = 0.0014;
-    const pointerBoostVelocity = 0.0042;
-    let velocity = baseVelocity;
-    let targetVelocity = baseVelocity;
-    let lastTime = performance.now();
-    let pointerDown = false;
+    let activeIndex = 1;
+    let lastMouseStepAt = 0;
+    const mouseStepDelay = prefersReducedMotion ? 900 : 520;
 
-    const wrapOffset = (offset, total) => {
-      let wrapped = ((offset + total / 2) % total + total) % total - total / 2;
-      if (wrapped === -total / 2) wrapped = total / 2;
-      return wrapped;
-    };
+    const wrapIndex = (index) => (index + usageCards.length) % usageCards.length;
 
-    const renderUsageCarousel = (time) => {
-      const delta = Math.min(50, time - lastTime);
-      lastTime = time;
-      velocity += (targetVelocity - velocity) * 0.035;
-      position += velocity * delta;
-
+    const getOffset = (index) => {
       const total = usageCards.length;
-      const spread = Math.min(430, Math.max(250, usageCarousel.offsetWidth * 0.3));
+      let offset = index - activeIndex;
+      if (offset > total / 2) offset -= total;
+      if (offset < -total / 2) offset += total;
+      return offset;
+    };
 
+    const updateUsageCarousel = () => {
       usageCards.forEach((card, index) => {
-        const offset = wrapOffset(index - position, total);
-        const distance = Math.abs(offset);
-        const clamped = Math.min(distance, 4.2);
-        const x = offset * spread;
-        const isCenter = distance < 0.42;
-        const scale = Math.max(0.66, 1.08 - clamped * 0.12);
-        const opacity = Math.max(0.12, 1 - clamped * 0.25);
-        const blur = Math.min(7.5, clamped * 1.9);
-        const rotate = Math.max(-20, Math.min(20, offset * -6));
-        const depth = isCenter ? 150 : -clamped * 92;
-        const y = isCenter ? '-54%' : '-50%';
+        const offset = getOffset(index);
+        const abs = Math.abs(offset);
 
-        card.classList.toggle('is-center', isCenter);
-        card.classList.toggle('is-distant', distance >= 2.75);
-        card.style.transform = `translate3d(calc(-50% + ${x}px), ${y}, ${depth}px) scale(${scale}) rotateY(${rotate}deg)`;
-        card.style.opacity = opacity.toFixed(3);
-        card.style.filter = `blur(${blur.toFixed(2)}px)`;
-        card.style.zIndex = String(1000 - Math.round(clamped * 100));
-        card.style.pointerEvents = distance < 2.75 ? 'auto' : 'none';
+        card.classList.remove(
+          'is-center',
+          'is-left',
+          'is-right',
+          'is-far-left',
+          'is-far-right',
+          'is-hidden'
+        );
+
+        if (offset === 0) card.classList.add('is-center');
+        else if (offset === -1) card.classList.add('is-left');
+        else if (offset === 1) card.classList.add('is-right');
+        else if (offset === -2) card.classList.add('is-far-left');
+        else if (offset === 2) card.classList.add('is-far-right');
+        else card.classList.add('is-hidden');
+
+        card.setAttribute('aria-current', offset === 0 ? 'true' : 'false');
+        card.tabIndex = abs <= 2 ? 0 : -1;
       });
-
-      window.requestAnimationFrame(renderUsageCarousel);
     };
 
-    const updateVelocityFromPointer = (clientX) => {
+    const goToUsageCard = (index) => {
+      activeIndex = wrapIndex(index);
+      updateUsageCarousel();
+    };
+
+    const openUsageReport = (card) => {
+      const report = usageReports[Number(card.dataset.report)];
+      if (!report || !usageModal || !usageModalTitle || !usageModalRole || !usageModalBody) return;
+
+      usageModalTitle.textContent = report.name;
+      usageModalRole.textContent = report.role;
+      usageModalBody.innerHTML = report.body.map((paragraph) => `<p>${paragraph}</p>`).join('');
+      usageModal.classList.add('is-open');
+      usageModal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('usage-modal-open');
+    };
+
+    const closeUsageReport = () => {
+      if (!usageModal) return;
+      usageModal.classList.remove('is-open');
+      usageModal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('usage-modal-open');
+    };
+
+    usageCards.forEach((card, index) => {
+      card.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (!card.classList.contains('is-center')) {
+          goToUsageCard(index);
+        }
+      });
+
+      card.addEventListener('dblclick', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!card.classList.contains('is-center')) {
+          goToUsageCard(index);
+          window.setTimeout(() => openUsageReport(card), 180);
+          return;
+        }
+        openUsageReport(card);
+      });
+
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          if (card.classList.contains('is-center')) openUsageReport(card);
+          else goToUsageCard(index);
+        }
+
+        if (event.key === 'ArrowLeft') {
+          goToUsageCard(activeIndex - 1);
+        }
+
+        if (event.key === 'ArrowRight') {
+          goToUsageCard(activeIndex + 1);
+        }
+      });
+    });
+
+    usageCarousel.addEventListener('pointermove', (event) => {
       const rect = usageCarousel.getBoundingClientRect();
-      const normalized = ((clientX - rect.left) / rect.width - 0.5) * 2;
-      const deadZone = Math.abs(normalized) < 0.2;
-      const intensity = deadZone ? 0 : Math.pow(Math.abs(normalized), 1.25);
-      const direction = normalized >= 0 ? 1 : -1;
-      targetVelocity = deadZone ? baseVelocity : direction * (pointerVelocity + intensity * (pointerDown ? pointerBoostVelocity : 0.0024));
-    };
+      const x = (event.clientX - rect.left) / rect.width;
+      const now = performance.now();
 
-    usageCarousel.addEventListener('pointermove', (event) => updateVelocityFromPointer(event.clientX));
-    usageCarousel.addEventListener('pointerenter', (event) => updateVelocityFromPointer(event.clientX));
-    usageCarousel.addEventListener('pointerleave', () => {
-      pointerDown = false;
-      targetVelocity = baseVelocity;
-    });
-    usageCarousel.addEventListener('pointerdown', (event) => {
-      pointerDown = true;
-      usageCarousel.classList.add('is-dragging');
-      usageCarousel.setPointerCapture?.(event.pointerId);
-      updateVelocityFromPointer(event.clientX);
-    });
-    usageCarousel.addEventListener('pointerup', (event) => {
-      pointerDown = false;
-      usageCarousel.classList.remove('is-dragging');
-      updateVelocityFromPointer(event.clientX);
-    });
-    usageCarousel.addEventListener('pointercancel', () => {
-      pointerDown = false;
-      usageCarousel.classList.remove('is-dragging');
-      targetVelocity = baseVelocity;
+      if (now - lastMouseStepAt < mouseStepDelay) return;
+
+      if (x < 0.26) {
+        goToUsageCard(activeIndex - 1);
+        lastMouseStepAt = now;
+      } else if (x > 0.74) {
+        goToUsageCard(activeIndex + 1);
+        lastMouseStepAt = now;
+      }
     });
 
-    usageCards.forEach((card) => {
-      card.addEventListener('click', () => {
-        const report = usageReports[Number(card.dataset.report)];
-        if (!report || !usageModal || !usageModalTitle || !usageModalRole || !usageModalBody) return;
+    usageCarousel.addEventListener('click', (event) => {
+      if (event.target.closest('.usage-card')) return;
+      const rect = usageCarousel.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
 
-        usageModalTitle.textContent = report.name;
-        usageModalRole.textContent = report.role;
-        usageModalBody.innerHTML = report.body.map((paragraph) => `<p>${paragraph}</p>`).join('');
-        usageModal.classList.add('is-open');
-        usageModal.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('usage-modal-open');
-      });
+      if (x < 0.42) goToUsageCard(activeIndex - 1);
+      if (x > 0.58) goToUsageCard(activeIndex + 1);
     });
 
     closeUsageModalButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        if (!usageModal) return;
-        usageModal.classList.remove('is-open');
-        usageModal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('usage-modal-open');
-      });
+      button.addEventListener('click', closeUsageReport);
+    });
+
+    usageModal?.addEventListener('click', (event) => {
+      if (event.target.matches('[data-close-usage-modal]')) closeUsageReport();
     });
 
     window.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && usageModal?.classList.contains('is-open')) {
-        usageModal.classList.remove('is-open');
-        usageModal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('usage-modal-open');
+        closeUsageReport();
       }
     });
 
-    window.requestAnimationFrame(renderUsageCarousel);
+    updateUsageCarousel();
   }
-
 });
 
 document.documentElement.classList.add('is-ready');
