@@ -3,10 +3,15 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/
 
 const CONFIG = {
   modelUrl: './assets/cam.glb',
-  exposure: 1.08,
-  background: 0x050505,
-  fogColor: 0x050505,
-  fogDensity: 0.0022,
+
+  // Visual realista mais claro. Se ainda ficar escuro, aumente para 1.85 ou 2.0.
+  exposure: 1.68,
+  background: 0x11100d,
+
+  // Desligado por padrão porque o GLB novo já está muito escuro.
+  fogEnabled: false,
+  fogColor: 0x11100d,
+  fogDensity: 0.0008,
 
   scrollForwardDistance: 7.5,
   scrollRightDrift: 0.32,
@@ -16,7 +21,11 @@ const CONFIG = {
   smoothFactor: 0.075,
   wigglePositionStrength: 0.015,
   wiggleRotationStrength: 0.0045,
-  wiggleSpeed: 0.82
+  wiggleSpeed: 0.82,
+
+  // Correção para GLBs com AO/bake forte demais.
+  aoIntensity: 0.42,
+  materialBrightnessLift: 0.08
 };
 
 const canvas = document.getElementById('scene');
@@ -29,8 +38,12 @@ const renderer = new THREE.WebGLRenderer({
   powerPreference: 'high-performance'
 });
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.35 : 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
+function setRendererSize() {
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.35 : 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+setRendererSize();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = CONFIG.exposure;
@@ -39,7 +52,10 @@ renderer.shadowMap.enabled = false;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.background);
-scene.fog = new THREE.FogExp2(CONFIG.fogColor, CONFIG.fogDensity);
+
+if (CONFIG.fogEnabled) {
+  scene.fog = new THREE.FogExp2(CONFIG.fogColor, CONFIG.fogDensity);
+}
 
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 2000);
 camera.position.set(0, 1.7, 6);
@@ -58,6 +74,7 @@ let smoothQuaternion = new THREE.Quaternion();
 const forward = new THREE.Vector3();
 const right = new THREE.Vector3();
 const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+const whiteLift = new THREE.Color(0xffffff);
 
 function setStatus(text, hideDelay = 1800) {
   if (!statusEl) return;
@@ -78,10 +95,17 @@ function easeInOut(t) {
 
 function isLightMaterialName(name) {
   const value = String(name || '').toLowerCase();
-  return value.includes('light') || value.includes('lamp') || value.includes('luz') || value.includes('ceiling_lights');
+  return value.includes('light') || value.includes('lamp') || value.includes('luz') || value.includes('emissive') || value.includes('ceiling_lights');
 }
 
-function preserveGLBMaterials(root) {
+function prepareTexture(texture, colorSpace) {
+  if (!texture) return;
+  texture.colorSpace = colorSpace;
+  texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+  texture.needsUpdate = true;
+}
+
+function preserveAndBrightenGLBMaterials(root) {
   root.traverse((object) => {
     if (!object.isMesh || !object.material) return;
 
@@ -95,37 +119,64 @@ function preserveGLBMaterials(root) {
       if (!material) return;
 
       material.side = THREE.DoubleSide;
-      material.needsUpdate = true;
 
-      if (material.map) {
-        material.map.colorSpace = THREE.SRGBColorSpace;
-        material.map.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
-        material.map.needsUpdate = true;
+      prepareTexture(material.map, THREE.SRGBColorSpace);
+      prepareTexture(material.emissiveMap, THREE.SRGBColorSpace);
+      prepareTexture(material.normalMap, THREE.NoColorSpace);
+      prepareTexture(material.roughnessMap, THREE.NoColorSpace);
+      prepareTexture(material.metalnessMap, THREE.NoColorSpace);
+      prepareTexture(material.aoMap, THREE.NoColorSpace);
+
+      // Se o AO do Blender veio pesado demais, reduz a influência no Three.js.
+      if (material.aoMap) {
+        material.aoMapIntensity = CONFIG.aoIntensity;
       }
 
-      if (material.normalMap) material.normalMap.colorSpace = THREE.NoColorSpace;
-      if (material.roughnessMap) material.roughnessMap.colorSpace = THREE.NoColorSpace;
-      if (material.metalnessMap) material.metalnessMap.colorSpace = THREE.NoColorSpace;
-      if (material.aoMap) material.aoMap.colorSpace = THREE.NoColorSpace;
-
+      // Segurança: remove emissive de materiais comuns, mas mantém luminárias.
       if (!isLightMaterialName(material.name)) {
         material.emissive = new THREE.Color(0x000000);
         material.emissiveIntensity = 0;
+      } else {
+        material.emissiveIntensity = Math.max(material.emissiveIntensity || 0, 1.35);
       }
 
-      material.roughness = Math.max(material.roughness ?? 0.86, 0.76);
+      // Pequeno lift nos materiais para compensar bake/occlusion escuro sem lavar a cena.
+      if (material.color) {
+        material.color.lerp(whiteLift, CONFIG.materialBrightnessLift);
+      }
+
+      material.roughness = Math.max(material.roughness ?? 0.82, 0.68);
       material.metalness = material.metalness ?? 0;
+      material.envMapIntensity = Math.max(material.envMapIntensity || 0, 0.75);
+      material.needsUpdate = true;
     });
   });
 }
 
-function addFallbackLights() {
-  const ambient = new THREE.HemisphereLight(0xfff1dc, 0x17130d, 0.62);
+function addRealisticFallbackLights() {
+  const ambient = new THREE.HemisphereLight(0xfff5e6, 0x34281c, 1.55);
+  ambient.name = 'fallback_realistic_ambient';
   scene.add(ambient);
 
-  const key = new THREE.DirectionalLight(0xffe6bd, 0.86);
-  key.position.set(6, 8, 5);
+  const key = new THREE.DirectionalLight(0xffead0, 1.25);
+  key.name = 'fallback_realistic_key';
+  key.position.set(6, 9, 5);
   scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0xd8e8ff, 0.62);
+  fill.name = 'fallback_realistic_fill';
+  fill.position.set(-6, 4, -5);
+  scene.add(fill);
+
+  const ceilingA = new THREE.PointLight(0xffddb0, 1.2, 22);
+  ceilingA.name = 'fallback_ceiling_warm_a';
+  ceilingA.position.set(0, 4.2, 0);
+  scene.add(ceilingA);
+
+  const ceilingB = new THREE.PointLight(0xffe7c6, 0.75, 26);
+  ceilingB.name = 'fallback_ceiling_warm_b';
+  ceilingB.position.set(0, 3.6, -7);
+  scene.add(ceilingB);
 }
 
 function getCameraFromGLB(gltf) {
@@ -207,11 +258,11 @@ loader.load(
   CONFIG.modelUrl,
   (gltf) => {
     model = gltf.scene;
-    preserveGLBMaterials(model);
+    preserveAndBrightenGLBMaterials(model);
     scene.add(model);
 
     syncBaseCamera(getCameraFromGLB(gltf));
-    addFallbackLights();
+    addRealisticFallbackLights();
     setStatus('cam.glb carregado');
   },
   (event) => {
@@ -237,8 +288,7 @@ function animate() {
 animate();
 
 window.addEventListener('resize', () => {
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.35 : 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  setRendererSize();
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 });
