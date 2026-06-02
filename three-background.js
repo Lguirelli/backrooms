@@ -3,7 +3,6 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/
 import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/RenderPass.js';
 import { BokehPass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/BokehPass.js';
-import { AfterimagePass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/AfterimagePass.js';
 
 /*
   BACKGROUND 3D — CAM1 COM CÂMERA RESTAURADA
@@ -46,12 +45,14 @@ const CONFIG = {
     rightTurnRadians: -0.54,
     rightTurnPower: 1.32,
 
-    // A câmera recua para a esquerda no começo e só depois abre para a direita.
-    // Isso evita atravessar a parede no meio do scroll.
-    arcLeftAvoidanceStrength: 0.86,
-    arcLeftAvoidanceEnd: 0.38,
+    // A câmera começa reta, depois faz um leve desvio para a esquerda
+    // e só então abre para a direita, evitando atravessar a parede.
+    arcStraightStart: 0.12,
+    arcLeftAvoidanceStrength: 0.52,
+    arcLeftAvoidanceStart: 0.12,
+    arcLeftAvoidanceEnd: 0.34,
     arcRightStrength: 1.18,
-    arcRightStart: 0.26,
+    arcRightStart: 0.30,
     arcVerticalStrength: 0.12,
 
     lensBreathingStrength: 0.42,
@@ -75,9 +76,6 @@ const CONFIG = {
 
   post: {
     enabled: true,
-
-    // Blur leve de movimento.
-    motionBlurDamp: 0.872,
 
     // Depth of field solicitado.
     dofAperture: 1.2,
@@ -127,7 +125,6 @@ camera.quaternion.copy(baseCameraQuaternion);
 camera.updateProjectionMatrix();
 
 const renderPass = new RenderPass(scene, camera);
-const afterimagePass = new AfterimagePass(CONFIG.post.motionBlurDamp);
 const bokehPass = new BokehPass(scene, camera, {
   focus: CONFIG.post.dofFocus,
   aperture: CONFIG.post.dofAperture,
@@ -142,7 +139,6 @@ composer.setSize(window.innerWidth, window.innerHeight);
 composer.addPass(renderPass);
 
 if (CONFIG.post.enabled) {
-  composer.addPass(afterimagePass);
   composer.addPass(bokehPass);
 }
 
@@ -221,7 +217,22 @@ function preserveOriginalGLBMaterials(root) {
     materials.forEach((material) => {
       if (!material) return;
 
-      // Segurança: não modificar os materiais do cam1.
+      const materialName = String(material.name || '').toLowerCase();
+
+      // Correção pontual solicitada:
+      // GreenSkirting estava com leitura levemente emissiva.
+      // Mantém o material original, mas remove emissão e deixa fosco.
+      if (materialName.includes('greenskirting')) {
+        if (material.emissive) {
+          material.emissive.set(0x000000);
+        }
+
+        material.emissiveIntensity = 0;
+        material.emissiveMap = null;
+        material.metalness = 0;
+        material.roughness = 0.96;
+      }
+
       material.needsUpdate = true;
     });
   });
@@ -245,8 +256,6 @@ function updatePostFromScroll(scroll) {
   bokehPass.uniforms.focus.value = CONFIG.post.dofFocus - eased * 3.0;
   bokehPass.uniforms.aperture.value = CONFIG.post.dofAperture;
   bokehPass.uniforms.maxblur.value = CONFIG.post.dofMaxBlur;
-
-  afterimagePass.uniforms.damp.value = CONFIG.post.motionBlurDamp + eased * 0.01;
 }
 
 function updateCameraFromScrollAndMouse() {
@@ -274,8 +283,15 @@ function updateCameraFromScrollAndMouse() {
   // Movimento em arco leve com desvio inicial para a esquerda.
   // Fase 1: desloca para a esquerda para não atravessar a parede.
   // Fase 2: volta ao centro e abre progressivamente para a direita.
-  const leftPhase = Math.min(scroll / CONFIG.camera.arcLeftAvoidanceEnd, 1);
-  const leftAvoidance = -Math.sin(leftPhase * Math.PI) * CONFIG.camera.arcLeftAvoidanceStrength;
+  const leftPhase = smoothstep(
+    CONFIG.camera.arcLeftAvoidanceStart,
+    CONFIG.camera.arcLeftAvoidanceEnd,
+    scroll
+  );
+
+  const leftAvoidance = scroll <= CONFIG.camera.arcStraightStart
+    ? 0
+    : -Math.sin(leftPhase * Math.PI) * CONFIG.camera.arcLeftAvoidanceStrength;
 
   const rightPhase = smoothstep(CONFIG.camera.arcRightStart, 1, scroll);
   const rightArc = rightPhase * CONFIG.camera.arcRightStrength;

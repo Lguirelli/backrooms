@@ -1597,3 +1597,166 @@ nav {
   position: relative;
   z-index: 5;
 }
+
+
+/* =========================================================
+   PATCH VISUAL — BOXES RETOS + GLOW LEVE
+   ========================================================= */
+
+/* Os boxes/imagens não devem ter pontas arredondadas */
+.hero-visual-card,
+.site-plan-card,
+.site-plan-frame img,
+.possibility-frame,
+.possibility-slide,
+.possibility-overlay {
+  border-radius: 0 !important;
+}
+
+/* Se existir máscara arredondada em pseudo-elementos, remove */
+.hero-visual-card::before,
+.hero-visual-card::after,
+.site-plan-card::before,
+.site-plan-card::after,
+.possibility-frame::before,
+.possibility-frame::after {
+  border-radius: 0 !important;
+}
+
+/* Glow leve para textos */
+body,
+p,
+li,
+a,
+span,
+small,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.display,
+.mono,
+.hero-title,
+.hero-lead,
+.hero-note,
+.eyebrow,
+.section-title,
+.section-kicker,
+.hero-nav,
+.nav-logo,
+.topbar-inner,
+.benefit-card h3,
+.benefit-card p,
+.possibility-caption,
+.site-plan-frame figcaption {
+  text-shadow:
+    0 0 6px rgba(247, 241, 223, 0.10),
+    0 0 14px rgba(216, 192, 92, 0.08) !important;
+}
+
+/* Glow leve para botões e chips */
+button,
+.btn,
+.btn-primary,
+.btn-ghost,
+.inline-btn,
+.chip,
+.hero-chip,
+.hero-pills .chip {
+  text-shadow:
+    0 0 8px rgba(247, 241, 223, 0.18),
+    0 0 16px rgba(216, 192, 92, 0.14) !important;
+  box-shadow:
+    0 0 0 1px rgba(216, 192, 92, 0.20),
+    0 0 12px rgba(216, 192, 92, 0.14) !important;
+}
+
+/* Glow sutil também para a marca do topo */
+.brand-mark,
+.nav-logo,
+.round-icon {
+  text-shadow:
+    0 0 8px rgba(247, 241, 223, 0.18),
+    0 0 16px rgba(216, 192, 92, 0.12) !important;
+}
+
+
+/* =========================================================
+   PATCH TIPOGRAFIA — ESPAÇAMENTO ÓTICO MAIS LIMPO
+   ========================================================= */
+
+/* Títulos grandes: menos compressão, leitura mais natural */
+.display,
+.hero-title,
+h1,
+h2,
+.proof-heading h2,
+.visit-panel h2,
+.cta-panel h2,
+.commercial-panel h3,
+.possibility-caption strong {
+  letter-spacing: -0.045em !important;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Títulos muito grandes mantêm impacto, mas sem colar demais */
+.hero-title {
+  letter-spacing: -0.055em !important;
+  word-spacing: 0.035em !important;
+}
+
+/* Textos mono: reduz espaçamento excessivo */
+.mono,
+.eyebrow,
+.hero-nav,
+.nav-logo,
+.topbar-inner,
+.site-plan-toolbar,
+.hero-tags span,
+.btn,
+.benefit-card span,
+.proof-grid span,
+.site-plan-notes span,
+.possibility-counter,
+.footer {
+  letter-spacing: 0.105em !important;
+  word-spacing: 0.045em !important;
+}
+
+/* Navegação e marca: mais legível */
+.brand-mark,
+.nav-logo,
+.hero-nav nav a,
+.topbar-note {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.04em !important;
+}
+
+/* Corpo de texto: leve ajuste de leitura */
+.hero-lead,
+.hero-note,
+.section-copy p,
+.atmosphere-copy p,
+.plan-copy > p,
+.cta-panel > p,
+.visit-panel > p,
+.commercial-panel > p,
+.section-heading p,
+.narrative-strip p,
+.benefit-card p,
+.possibility-caption p {
+  letter-spacing: -0.012em !important;
+  word-spacing: 0.02em !important;
+}
+
+/* Botões: mantém estética técnica, mas sem ficar apertado */
+.btn,
+.btn-primary,
+.btn-ghost,
+.inline-btn {
+  letter-spacing: 0.115em !important;
+  word-spacing: 0.045em !important;
+}

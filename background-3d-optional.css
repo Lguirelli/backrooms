@@ -181,3 +181,82 @@ button,
     0 0 8px rgba(247, 241, 223, 0.18),
     0 0 16px rgba(216, 192, 92, 0.12) !important;
 }
+
+
+/* =========================================================
+   PATCH TIPOGRAFIA — ESPAÇAMENTO ÓTICO MAIS LIMPO
+   ========================================================= */
+
+/* Títulos grandes: menos compressão, leitura mais natural */
+.display,
+.hero-title,
+h1,
+h2,
+.proof-heading h2,
+.visit-panel h2,
+.cta-panel h2,
+.commercial-panel h3,
+.possibility-caption strong {
+  letter-spacing: -0.045em !important;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Títulos muito grandes mantêm impacto, mas sem colar demais */
+.hero-title {
+  letter-spacing: -0.055em !important;
+  word-spacing: 0.035em !important;
+}
+
+/* Textos mono: reduz espaçamento excessivo */
+.mono,
+.eyebrow,
+.hero-nav,
+.nav-logo,
+.topbar-inner,
+.site-plan-toolbar,
+.hero-tags span,
+.btn,
+.benefit-card span,
+.proof-grid span,
+.site-plan-notes span,
+.possibility-counter,
+.footer {
+  letter-spacing: 0.105em !important;
+  word-spacing: 0.045em !important;
+}
+
+/* Navegação e marca: mais legível */
+.brand-mark,
+.nav-logo,
+.hero-nav nav a,
+.topbar-note {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.04em !important;
+}
+
+/* Corpo de texto: leve ajuste de leitura */
+.hero-lead,
+.hero-note,
+.section-copy p,
+.atmosphere-copy p,
+.plan-copy > p,
+.cta-panel > p,
+.visit-panel > p,
+.commercial-panel > p,
+.section-heading p,
+.narrative-strip p,
+.benefit-card p,
+.possibility-caption p {
+  letter-spacing: -0.012em !important;
+  word-spacing: 0.02em !important;
+}
+
+/* Botões: mantém estética técnica, mas sem ficar apertado */
+.btn,
+.btn-primary,
+.btn-ghost,
+.inline-btn {
+  letter-spacing: 0.115em !important;
+  word-spacing: 0.045em !important;
+}
