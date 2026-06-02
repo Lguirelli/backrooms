@@ -1,4 +1,4 @@
-PATCH — CAM1 CORRIGIDO
+PATCH — CAM1 COM POSIÇÃO INICIAL RESTAURADA
 
 Substituir no repositório:
 
@@ -9,34 +9,36 @@ Substituir no repositório:
 - background-3d-optional.css
 - assets/cam.glb
 
-Correções:
+O que este patch corrige:
 
-1. Volta para o cam1.glb.
-2. Adiciona cache busting no caminho do GLB para evitar o navegador puxar o cam2 antigo.
-3. Preserva os materiais originais:
-   - não clona material
+1. Volta para o cam1.glb
+   - assets/cam.glb é o cam1.glb renomeado.
+
+2. Restaura a posição inicial da câmera
+   - cam1.glb não tinha câmera exportada.
+   - Por isso, o enquadramento inicial foi restaurado manualmente no código.
+
+3. Recupera os efeitos de câmera
+   - avanço com scroll
+   - rotação progressiva para a direita
+   - movimento em arco leve
+   - respiração de lente
+   - blur leve de movimento
+   - depth of field com aperture 1.2
+
+4. Wiggle deixou de ser constante
+   - agora a reação da câmera vem do movimento do mouse.
+
+5. Materiais do cam1
+   - o código não clona material
    - não troca textura
    - não altera emissive
    - não altera roughness/metalness
-   - não altera normal map
-   - não altera AO map
+   - não altera normalMap/aoMap
    - não altera flipY/colorSpace
-4. Remove overlays e filtros que afetavam a leitura visual do GLB:
-   - scene-depth
-   - scene-gradient
-   - scene-vignette
-   - scanlines
-   - noise
-   - grid-bg
-5. Recupera movimento de câmera por scroll:
-   - avanço para frente
-   - rotação progressiva para direita
-   - movimento em arco leve
-   - respiração de lente
-6. Wiggle agora vem do movimento do mouse:
-   - não existe wiggle automático constante
-   - o mouse gera parallax/instabilidade leve
-7. Mantém luzes do GLB e adiciona luzes externas leves de reforço.
+
+6. Luzes
+   - mantém duas luzes de reforço equivalentes às posições adicionadas no Blender.
 
 Controles principais no topo do three-background.js:
 
@@ -46,5 +48,9 @@ CONFIG.camera.arcStrength
 CONFIG.camera.lensBreathingStrength
 CONFIG.camera.mousePositionStrength
 CONFIG.camera.mouseRotationStrength
-CONFIG.camera.mouseVelocityStrength
-CONFIG.exposure
+CONFIG.post.dofAperture
+CONFIG.post.motionBlurDamp
+
+Se o efeito de blur/DOF pesar no navegador, altere:
+
+CONFIG.post.enabled = false

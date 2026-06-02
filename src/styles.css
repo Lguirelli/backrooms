@@ -1135,41 +1135,36 @@ a {
 
 
 /* =========================================================
-   3D BACKGROUND RESET — CAM1 MATERIAL FIX
-   Remove filtros e overlays que alteram a leitura dos materiais.
+   3D BACKGROUND MATERIAL SAFETY OVERRIDES
+   O GLB deve aparecer sem filtros, blends ou overlays sobre o canvas.
    ========================================================= */
 
 #scene {
   filter: none !important;
   mix-blend-mode: normal !important;
   opacity: 1 !important;
-  transform: none;
 }
 
-.scene-wrap,
 .scene-wrapper,
 .three-background,
+.scene-layer,
 .background-3d {
   filter: none !important;
   mix-blend-mode: normal !important;
 }
 
-.scene-depth,
-.scene-gradient,
-.scene-vignette,
-.scene-scanlines,
-.scanlines,
-.noise,
-.grid-bg,
-.vignette,
-.scene-wrap::before,
-.scene-wrap::after,
 .scene-wrapper::before,
 .scene-wrapper::after,
 .three-background::before,
 .three-background::after,
 .background-3d::before,
-.background-3d::after {
+.background-3d::after,
+.scene-depth,
+.scene-gradient,
+.scene-vignette,
+.scene-scanlines,
+.scanlines,
+.vignette {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;

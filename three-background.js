@@ -1,62 +1,83 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js';
+import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/RenderPass.js';
+import { BokehPass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/BokehPass.js';
+import { AfterimagePass } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/postprocessing/AfterimagePass.js';
 
 /*
-  BACKGROUND 3D — CAM1 LIMPO
-  ---------------------------------------------------------
-  Regras deste arquivo:
-  - usa somente assets/cam.glb
-  - volta para o cam1.glb
-  - usa a câmera existente do GLB como base
-  - preserva 100% dos materiais/texturas do GLB
+  BACKGROUND 3D — CAM1 COM CÂMERA RESTAURADA
+
+  Importante:
+  - cam1.glb não possui câmera exportada.
+  - Por isso, a posição inicial foi restaurada manualmente com a câmera que estava funcionando.
+  - O modelo usado continua sendo o cam1, para recuperar os materiais.
+  - As luzes de reforço foram mantidas no Three.js.
+
+  O código não altera materiais do GLB:
   - não clona material
   - não troca textura
-  - não altera emissive/roughness/metalness/normal/aoMap
+  - não mexe em emissive
+  - não mexe em roughness/metalness
+  - não mexe em normalMap/aoMap
   - não altera flipY/colorSpace das texturas importadas
-
-  Movimento:
-  - scroll empurra a câmera para frente
-  - scroll gera movimento em arco leve
-  - scroll gira progressivamente para a direita
-  - mouse gera wiggle/parallax, sem wiggle automático constante
-  - respiração de lente sutil
 */
 
 const CONFIG = {
-  // Query string evita cache do cam2/cam quebrado no navegador.
-  modelPath: './assets/cam.glb?v=cam1-material-camera-fix-04',
-
+  modelPath: './assets/cam.glb?v=cam1-fixed-camera-01',
   clearColor: 0x080807,
-  exposure: 1.42,
+  exposure: 1.48,
 
   camera: {
-    fallbackFov: 42,
+    // Câmera restaurada da versão que tinha enquadramento correto.
+    position: new THREE.Vector3(-12.121020317077637, 0.8076560497283936, 0.593407154083252),
+    quaternion: new THREE.Quaternion(
+      0.01360255479812622,
+      -0.690179705619812,
+      0.012977774254977703,
+      0.7233937978744507
+    ),
+
+    fov: THREE.MathUtils.radToDeg(0.39959652046304894),
     near: 0.1,
-    far: 4000,
+    far: 1000,
 
-    scrollForwardDistance: 14,
-    rightTurnRadians: -0.72,
-    rightTurnPower: 1.22,
+    scrollForwardDistance: 9.8,
+    rightTurnRadians: -0.54,
+    rightTurnPower: 1.32,
 
-    arcStrength: 1.35,
+    arcStrength: 1.05,
     arcVerticalStrength: 0.12,
 
-    lensBreathingStrength: 0.38,
-    lensBreathingSpeed: 0.34,
+    lensBreathingStrength: 0.42,
+    lensBreathingSpeed: 0.38,
 
-    mousePositionStrength: 0.035,
-    mouseRotationStrength: 0.038,
-    mouseVelocityStrength: 0.018,
-    mouseLerp: 0.075
+    mousePositionStrength: 0.055,
+    mouseRotationStrength: 0.025,
+    mouseEase: 0.075
   },
 
   lights: {
-    // Mantém luzes do GLB e adiciona reforços leves por fora.
-    ambientIntensity: 0.9,
-    keyIntensity: 0.85,
-    fillIntensity: 0.5,
-    frontIntensity: 0.32,
-    ceilingBoostIntensity: 0.5
+    ambientIntensity: 1.15,
+    keyIntensity: 1.0,
+    fillIntensity: 0.64,
+    frontIntensity: 0.42,
+
+    // Luzes equivalentes às duas luzes que você adicionou no Blender.
+    blenderPointIntensity: 1.1,
+    blenderPointDistance: 58
+  },
+
+  post: {
+    enabled: true,
+
+    // Blur leve de movimento.
+    motionBlurDamp: 0.872,
+
+    // Depth of field solicitado.
+    dofAperture: 1.2,
+    dofFocus: 17.5,
+    dofMaxBlur: 0.0048
   }
 };
 
@@ -71,7 +92,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 function getPixelRatio() {
-  return Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.25 : 1.75);
+  return Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.2 : 1.65);
 }
 
 renderer.setPixelRatio(getPixelRatio());
@@ -86,46 +107,72 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.clearColor);
 
 const camera = new THREE.PerspectiveCamera(
-  CONFIG.camera.fallbackFov,
+  CONFIG.camera.fov,
   window.innerWidth / window.innerHeight,
   CONFIG.camera.near,
   CONFIG.camera.far
 );
 
-const ambient = new THREE.HemisphereLight(0xffffff, 0x272016, CONFIG.lights.ambientIntensity);
+const baseCameraPosition = CONFIG.camera.position.clone();
+const baseCameraQuaternion = CONFIG.camera.quaternion.clone().normalize();
+const baseFov = CONFIG.camera.fov;
+
+camera.position.copy(baseCameraPosition);
+camera.quaternion.copy(baseCameraQuaternion);
+camera.updateProjectionMatrix();
+
+const renderPass = new RenderPass(scene, camera);
+const afterimagePass = new AfterimagePass(CONFIG.post.motionBlurDamp);
+const bokehPass = new BokehPass(scene, camera, {
+  focus: CONFIG.post.dofFocus,
+  aperture: CONFIG.post.dofAperture,
+  maxblur: CONFIG.post.dofMaxBlur,
+  width: window.innerWidth,
+  height: window.innerHeight
+});
+
+const composer = new EffectComposer(renderer);
+composer.setPixelRatio(getPixelRatio());
+composer.setSize(window.innerWidth, window.innerHeight);
+composer.addPass(renderPass);
+
+if (CONFIG.post.enabled) {
+  composer.addPass(afterimagePass);
+  composer.addPass(bokehPass);
+}
+
+const ambient = new THREE.HemisphereLight(0xffffff, 0x2a2418, CONFIG.lights.ambientIntensity);
 scene.add(ambient);
 
-const keyLight = new THREE.DirectionalLight(0xfff1d0, CONFIG.lights.keyIntensity);
-keyLight.position.set(9, 11, 5);
+const keyLight = new THREE.DirectionalLight(0xfff0cf, CONFIG.lights.keyIntensity);
+keyLight.position.set(8, 10, 4);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0xd7e0ff, CONFIG.lights.fillIntensity);
-fillLight.position.set(-8, 4, -7);
+const fillLight = new THREE.DirectionalLight(0xd8e0ff, CONFIG.lights.fillIntensity);
+fillLight.position.set(-8, 4, -6);
 scene.add(fillLight);
 
-const frontLight = new THREE.PointLight(0xffffff, CONFIG.lights.frontIntensity, 36);
-frontLight.position.set(0, 4, 7);
+const frontLight = new THREE.PointLight(0xffffff, CONFIG.lights.frontIntensity, 34);
+frontLight.position.set(-7.5, 2.1, 2.8);
 scene.add(frontLight);
 
-const ceilingBoost = new THREE.PointLight(0xffd28a, CONFIG.lights.ceilingBoostIntensity, 52);
-ceilingBoost.position.set(0, 7, -5);
-scene.add(ceilingBoost);
+// Mantém as duas luzes que você adicionou para resolver iluminação,
+// mas como luzes no runtime para funcionarem mesmo usando cam1.glb.
+const pointA = new THREE.PointLight(0xffd49a, CONFIG.lights.blenderPointIntensity, CONFIG.lights.blenderPointDistance, 1.2);
+pointA.position.set(-3.7223145961761475, 0.9184240698814392, -3.2319529056549072);
+scene.add(pointA);
 
-let loadedCamera = null;
-let baseFov = CONFIG.camera.fallbackFov;
+const pointB = new THREE.PointLight(0xffd49a, CONFIG.lights.blenderPointIntensity, CONFIG.lights.blenderPointDistance, 1.2);
+pointB.position.set(3.6361539363861084, 0.9184240698814392, 7.016952991485596);
+scene.add(pointB);
 
-const baseCameraPosition = new THREE.Vector3();
-const baseCameraQuaternion = new THREE.Quaternion();
+let modelLoaded = false;
 
 const mouse = {
-  x: 0,
-  y: 0,
   targetX: 0,
   targetY: 0,
-  velocityX: 0,
-  velocityY: 0,
-  lastX: 0,
-  lastY: 0,
+  currentX: 0,
+  currentY: 0,
   hasPointer: false
 };
 
@@ -156,77 +203,49 @@ function easeOutSine(t) {
   return Math.sin((t * Math.PI) / 2);
 }
 
-function preserveOriginalGLB(root) {
+function preserveOriginalGLBMaterials(root) {
   root.traverse((object) => {
-    if (object.isMesh) {
-      object.frustumCulled = false;
-      object.castShadow = false;
-      object.receiveShadow = false;
+    if (!object.isMesh) return;
 
-      // Não tocar no material. O GLTFLoader já interpreta o GLB.
-      // Nenhum material é clonado, substituído ou editado aqui.
-    }
+    object.frustumCulled = false;
+    object.castShadow = false;
+    object.receiveShadow = false;
 
-    if (object.isLight) {
-      // Mantém as luzes do Blender e só garante que elas continuem ativas.
-      object.visible = true;
-    }
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+
+    materials.forEach((material) => {
+      if (!material) return;
+
+      // Segurança: não modificar os materiais do cam1.
+      material.needsUpdate = true;
+    });
   });
 }
 
-function findBestCamera(gltf) {
-  if (gltf.cameras && gltf.cameras.length) {
-    return gltf.cameras[0];
-  }
-
-  let found = null;
-
-  gltf.scene.traverse((object) => {
-    if (!found && object.isCamera) {
-      found = object;
-    }
-  });
-
-  return found;
+function updateMouseCameraInfluence() {
+  mouse.currentX += (mouse.targetX - mouse.currentX) * CONFIG.camera.mouseEase;
+  mouse.currentY += (mouse.targetY - mouse.currentY) * CONFIG.camera.mouseEase;
 }
 
-function applyCameraBaseFromGLB(sourceCamera) {
-  loadedCamera = sourceCamera;
+function updatePostFromScroll(scroll) {
+  if (!CONFIG.post.enabled) return;
 
-  sourceCamera.updateMatrixWorld(true);
+  const eased = easeInOutCubic(scroll);
 
-  sourceCamera.getWorldPosition(baseCameraPosition);
-  sourceCamera.getWorldQuaternion(baseCameraQuaternion);
+  bokehPass.uniforms.focus.value = CONFIG.post.dofFocus - eased * 3.0;
+  bokehPass.uniforms.aperture.value = CONFIG.post.dofAperture;
+  bokehPass.uniforms.maxblur.value = CONFIG.post.dofMaxBlur;
 
-  baseFov = sourceCamera.fov || CONFIG.camera.fallbackFov;
-
-  camera.fov = baseFov;
-  camera.near = sourceCamera.near || CONFIG.camera.near;
-  camera.far = sourceCamera.far || CONFIG.camera.far;
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  camera.position.copy(baseCameraPosition);
-  camera.quaternion.copy(baseCameraQuaternion);
+  afterimagePass.uniforms.damp.value = CONFIG.post.motionBlurDamp + eased * 0.01;
 }
 
-function updateMouseSmooth() {
-  mouse.x += (mouse.targetX - mouse.x) * CONFIG.camera.mouseLerp;
-  mouse.y += (mouse.targetY - mouse.y) * CONFIG.camera.mouseLerp;
-
-  mouse.velocityX *= 0.88;
-  mouse.velocityY *= 0.88;
-}
-
-function updateCamera() {
-  if (!loadedCamera) return;
-
-  updateMouseSmooth();
-
+function updateCameraFromScrollAndMouse() {
   const scroll = getScrollProgress();
   const eased = easeInOutCubic(scroll);
   const easeOut = easeOutSine(scroll);
   const time = performance.now() * 0.001;
+
+  updateMouseCameraInfluence();
 
   const forward = new THREE.Vector3(0, 0, -1)
     .applyQuaternion(baseCameraQuaternion)
@@ -242,31 +261,22 @@ function updateCamera() {
 
   const moveForward = forward.clone().multiplyScalar(eased * CONFIG.camera.scrollForwardDistance);
 
-  // Movimento em arco leve pelo scroll.
+  // Movimento em arco leve.
   const arc = Math.sin(scroll * Math.PI) * CONFIG.camera.arcStrength;
   const arcVertical = Math.sin(scroll * Math.PI) * CONFIG.camera.arcVerticalStrength;
   const moveArc = right.clone().multiplyScalar(arc).add(up.clone().multiplyScalar(arcVertical));
 
-  // Mouse wiggle/parallax. Não existe wiggle automático constante.
-  const mousePosition = right.clone()
-    .multiplyScalar(mouse.x * CONFIG.camera.mousePositionStrength)
-    .add(up.clone().multiplyScalar(-mouse.y * CONFIG.camera.mousePositionStrength * 0.65));
+  // Movimento de mouse, substituindo o wiggle constante.
+  const mouseMove = right.clone()
+    .multiplyScalar(mouse.currentX * CONFIG.camera.mousePositionStrength)
+    .add(up.clone().multiplyScalar(-mouse.currentY * CONFIG.camera.mousePositionStrength * 0.55));
 
-  const velocityKick = right.clone()
-    .multiplyScalar(mouse.velocityX * CONFIG.camera.mouseVelocityStrength)
-    .add(up.clone().multiplyScalar(-mouse.velocityY * CONFIG.camera.mouseVelocityStrength * 0.5));
-
-  camera.position
-    .copy(baseCameraPosition)
-    .add(moveForward)
-    .add(moveArc)
-    .add(mousePosition)
-    .add(velocityKick);
+  camera.position.copy(baseCameraPosition).add(moveForward).add(moveArc).add(mouseMove);
 
   const rightTurn = Math.pow(scroll, CONFIG.camera.rightTurnPower) * CONFIG.camera.rightTurnRadians;
 
-  const mouseYaw = mouse.x * CONFIG.camera.mouseRotationStrength + mouse.velocityX * 0.004;
-  const mousePitch = -mouse.y * CONFIG.camera.mouseRotationStrength * 0.58 - mouse.velocityY * 0.0025;
+  const mouseYaw = mouse.currentX * CONFIG.camera.mouseRotationStrength;
+  const mousePitch = mouse.currentY * CONFIG.camera.mouseRotationStrength * 0.65;
 
   const scrollRotation = new THREE.Quaternion().setFromEuler(
     new THREE.Euler(mousePitch, rightTurn + mouseYaw, 0, 'YXZ')
@@ -274,60 +284,30 @@ function updateCamera() {
 
   camera.quaternion.copy(baseCameraQuaternion).multiply(scrollRotation);
 
-  // Respiração de lente sutil.
+  // Respiração de lente.
   camera.fov =
     baseFov +
     Math.sin(time * CONFIG.camera.lensBreathingSpeed) * CONFIG.camera.lensBreathingStrength -
-    easeOut * 0.9;
+    easeOut * 1.05;
 
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+
+  updatePostFromScroll(scroll);
 }
-
-window.addEventListener('pointermove', (event) => {
-  const nx = (event.clientX / window.innerWidth) * 2 - 1;
-  const ny = (event.clientY / window.innerHeight) * 2 - 1;
-
-  if (mouse.hasPointer) {
-    mouse.velocityX += nx - mouse.lastX;
-    mouse.velocityY += ny - mouse.lastY;
-  }
-
-  mouse.targetX = nx;
-  mouse.targetY = ny;
-  mouse.lastX = nx;
-  mouse.lastY = ny;
-  mouse.hasPointer = true;
-}, { passive: true });
-
-window.addEventListener('pointerleave', () => {
-  mouse.targetX = 0;
-  mouse.targetY = 0;
-  mouse.velocityX = 0;
-  mouse.velocityY = 0;
-}, { passive: true });
 
 const loader = new GLTFLoader();
 
 loader.load(
   CONFIG.modelPath,
   (gltf) => {
-    preserveOriginalGLB(gltf.scene);
+    modelLoaded = true;
+
+    preserveOriginalGLBMaterials(gltf.scene);
     scene.add(gltf.scene);
-    gltf.scene.updateMatrixWorld(true);
 
-    const sceneCamera = findBestCamera(gltf);
-
-    if (sceneCamera) {
-      applyCameraBaseFromGLB(sceneCamera);
-      updateCamera();
-      setStatus('cam1.glb carregado / materiais originais preservados');
-    } else {
-      loadedCamera = camera;
-      camera.position.set(0, 2, 8);
-      camera.lookAt(0, 2, 0);
-      camera.updateProjectionMatrix();
-      setStatus('cam1.glb carregado / câmera padrão usada');
-    }
+    updateCameraFromScrollAndMouse();
+    setStatus('cam1.glb carregado / câmera restaurada');
   },
   (event) => {
     if (!statusEl) return;
@@ -345,26 +325,56 @@ loader.load(
   }
 );
 
+function renderScene() {
+  if (CONFIG.post.enabled) {
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
 
-  updateCamera();
+  updateCameraFromScrollAndMouse();
 
   const time = performance.now() * 0.001;
   frontLight.intensity = CONFIG.lights.frontIntensity + Math.sin(time * 0.8) * 0.018;
-  ceilingBoost.intensity = CONFIG.lights.ceilingBoostIntensity + Math.sin(time * 0.55) * 0.025;
 
-  renderer.render(scene, camera);
+  renderScene();
 }
 
 animate();
 
+window.addEventListener('pointermove', (event) => {
+  const x = event.clientX / Math.max(window.innerWidth, 1);
+  const y = event.clientY / Math.max(window.innerHeight, 1);
+
+  mouse.targetX = (x - 0.5) * 2;
+  mouse.targetY = (y - 0.5) * 2;
+  mouse.hasPointer = true;
+}, { passive: true });
+
+window.addEventListener('pointerleave', () => {
+  mouse.targetX = 0;
+  mouse.targetY = 0;
+}, { passive: true });
+
+window.addEventListener('scroll', () => {
+  updateCameraFromScrollAndMouse();
+}, { passive: true });
+
 window.addEventListener('resize', () => {
-  renderer.setPixelRatio(getPixelRatio());
+  const pixelRatio = getPixelRatio();
+
+  renderer.setPixelRatio(pixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
+
+  composer.setPixelRatio(pixelRatio);
+  composer.setSize(window.innerWidth, window.innerHeight);
 
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
-  updateCamera();
+  updateCameraFromScrollAndMouse();
 });

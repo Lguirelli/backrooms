@@ -1,27 +1,21 @@
-/* BACKGROUND 3D OPTIONAL RESET — CAM1 */
-
 #scene {
   filter: none !important;
   mix-blend-mode: normal !important;
   opacity: 1 !important;
 }
 
-.scene-depth,
-.scene-gradient,
-.scene-vignette,
-.scene-scanlines,
-.scanlines,
-.noise,
-.grid-bg,
-.vignette,
-.scene-wrap::before,
-.scene-wrap::after,
 .scene-wrapper::before,
 .scene-wrapper::after,
 .three-background::before,
 .three-background::after,
 .background-3d::before,
-.background-3d::after {
+.background-3d::after,
+.scene-depth,
+.scene-gradient,
+.scene-vignette,
+.scene-scanlines,
+.scanlines,
+.vignette {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
