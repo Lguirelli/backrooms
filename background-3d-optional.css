@@ -97,3 +97,87 @@ nav {
   position: relative;
   z-index: 5;
 }
+
+
+/* =========================================================
+   PATCH VISUAL — BOXES RETOS + GLOW LEVE
+   ========================================================= */
+
+/* Os boxes/imagens não devem ter pontas arredondadas */
+.hero-visual-card,
+.site-plan-card,
+.site-plan-frame img,
+.possibility-frame,
+.possibility-slide,
+.possibility-overlay {
+  border-radius: 0 !important;
+}
+
+/* Se existir máscara arredondada em pseudo-elementos, remove */
+.hero-visual-card::before,
+.hero-visual-card::after,
+.site-plan-card::before,
+.site-plan-card::after,
+.possibility-frame::before,
+.possibility-frame::after {
+  border-radius: 0 !important;
+}
+
+/* Glow leve para textos */
+body,
+p,
+li,
+a,
+span,
+small,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.display,
+.mono,
+.hero-title,
+.hero-lead,
+.hero-note,
+.eyebrow,
+.section-title,
+.section-kicker,
+.hero-nav,
+.nav-logo,
+.topbar-inner,
+.benefit-card h3,
+.benefit-card p,
+.possibility-caption,
+.site-plan-frame figcaption {
+  text-shadow:
+    0 0 6px rgba(247, 241, 223, 0.10),
+    0 0 14px rgba(216, 192, 92, 0.08) !important;
+}
+
+/* Glow leve para botões e chips */
+button,
+.btn,
+.btn-primary,
+.btn-ghost,
+.inline-btn,
+.chip,
+.hero-chip,
+.hero-pills .chip {
+  text-shadow:
+    0 0 8px rgba(247, 241, 223, 0.18),
+    0 0 16px rgba(216, 192, 92, 0.14) !important;
+  box-shadow:
+    0 0 0 1px rgba(216, 192, 92, 0.20),
+    0 0 12px rgba(216, 192, 92, 0.14) !important;
+}
+
+/* Glow sutil também para a marca do topo */
+.brand-mark,
+.nav-logo,
+.round-icon {
+  text-shadow:
+    0 0 8px rgba(247, 241, 223, 0.18),
+    0 0 16px rgba(216, 192, 92, 0.12) !important;
+}
