@@ -3433,3 +3433,56 @@ body.usage-modal-open {
     line-height: 1.65 !important;
   }
 }
+
+
+/* === Ajuste mobile: reduzir cards para revelar múltiplos itens === */
+@media (max-width: 760px) {
+  .usage-carousel {
+    height: 320px !important;
+    overflow: hidden !important;
+  }
+
+  .usage-card {
+    width: min(62vw, 248px) !important;
+    min-height: 210px !important;
+    padding: 18px 16px !important;
+    gap: 8px !important;
+  }
+
+  .usage-card h3 {
+    font-size: clamp(1.18rem, 6vw, 1.75rem) !important;
+  }
+
+  .usage-card small {
+    font-size: 0.70rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .usage-card p {
+    max-width: 96% !important;
+    font-size: 0.80rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .usage-card.is-center {
+    --card-scale: 1 !important;
+    --card-depth: 120px !important;
+  }
+
+  .usage-card.is-left {
+    --card-x: -42vw !important;
+    --card-opacity: 0.34 !important;
+    --card-blur: 2.8px !important;
+  }
+
+  .usage-card.is-right {
+    --card-x: 42vw !important;
+    --card-opacity: 0.34 !important;
+    --card-blur: 2.8px !important;
+  }
+
+  .usage-card.is-far-left,
+  .usage-card.is-far-right {
+    --card-opacity: 0 !important;
+  }
+}
