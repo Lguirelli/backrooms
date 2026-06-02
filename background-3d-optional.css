@@ -1,301 +1,73 @@
-/* =========================================================
-   3D BACKGROUND OVERLAY — MAIS OPACO, SEM ALTERAR MATERIAIS
-   Os efeitos acontecem por cima do canvas, não no GLB.
-   ========================================================= */
+/* PATCH — BLOOM BEM LEVE + OVERLAY #202020 50% + RUÍDO */
 
 #scene {
-  filter: none !important;
-  mix-blend-mode: normal !important;
+  filter: blur(3.2px) contrast(0.98) saturate(0.74) brightness(0.56) !important;
   opacity: 1 !important;
+  transform: scale(1.02);
+  transform-origin: center center;
+  will-change: filter, transform;
 }
 
-.scene-wrapper,
-.three-background,
-.background-3d {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  filter: none !important;
-  mix-blend-mode: normal !important;
-}
-
-/* Reativa camadas visuais por cima do 3D */
-.scene-depth,
-.scene-gradient,
-.scene-vignette {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: none !important;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 1 !important;
-}
-
-/* Camada de opacidade geral: reduz disputa do 3D com a copy */
 .scene-depth {
   background:
+    linear-gradient(rgba(32, 32, 32, 0.50), rgba(32, 32, 32, 0.50)),
     linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.58) 0%,
-      rgba(0, 0, 0, 0.38) 26%,
-      rgba(0, 0, 0, 0.30) 50%,
-      rgba(0, 0, 0, 0.44) 78%,
-      rgba(0, 0, 0, 0.66) 100%
+      rgba(0, 0, 0, 0.28) 0%,
+      rgba(0, 0, 0, 0.10) 28%,
+      rgba(0, 0, 0, 0.12) 62%,
+      rgba(0, 0, 0, 0.34) 100%
     ) !important;
 }
 
-/* Escurecimento vertical para manter leitura das seções */
 .scene-gradient {
   background:
     linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.30) 0%,
-      rgba(0, 0, 0, 0.10) 22%,
-      rgba(0, 0, 0, 0.32) 62%,
-      rgba(0, 0, 0, 0.72) 100%
-    ) !important;
-}
-
-/* Vinheta cinematográfica sem mexer nos materiais */
-.scene-vignette {
-  background:
+      rgba(3, 3, 2, 0.44) 0%,
+      rgba(3, 3, 2, 0.52) 22%,
+      rgba(3, 3, 2, 0.68) 62%,
+      rgba(3, 3, 2, 0.88) 100%
+    ),
     radial-gradient(
-      circle at 50% 36%,
-      rgba(0, 0, 0, 0.02) 0%,
-      rgba(0, 0, 0, 0.12) 42%,
-      rgba(0, 0, 0, 0.48) 78%,
-      rgba(0, 0, 0, 0.76) 100%
+      circle at 52% 40%,
+      rgba(0, 0, 0, 0.00) 0 24%,
+      rgba(0, 0, 0, 0.16) 54%,
+      rgba(0, 0, 0, 0.52) 100%
     ) !important;
 }
 
-/* Ruído sutil por cima, sem filtro no canvas */
-.scene-scanlines,
-.scanlines,
-.noise {
-  display: block !important;
-  visibility: visible !important;
-  pointer-events: none !important;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 2 !important;
-  opacity: 0.045 !important;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px) !important;
-  background-size: 100% 4px !important;
-  mix-blend-mode: overlay !important;
+.scene-vignette {
+  box-shadow: inset 0 0 260px rgba(0, 0, 0, 0.72) !important;
 }
 
-/* Garante que o conteúdo fique acima das camadas */
-.site-shell,
-.page-shell,
-.main-content,
-.hero,
-section,
-header,
-nav {
-  position: relative;
+.noise::before {
+  z-index: 6;
+  opacity: 0.055 !important;
+  mix-blend-mode: soft-light !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E") !important;
+  background-size: 180px 180px !important;
+  animation: sensorNoiseShift 0.4s steps(2) infinite !important;
+}
+
+.scanlines::before {
   z-index: 5;
+  opacity: 0.022 !important;
+  mix-blend-mode: overlay !important;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.06) 0px,
+    rgba(255,255,255,0.06) 1px,
+    transparent 1px,
+    transparent 4px
+  ) !important;
+  background-size: 100% 4px !important;
 }
 
-
-/* =========================================================
-   PATCH VISUAL — BOXES RETOS + GLOW LEVE
-   ========================================================= */
-
-/* Os boxes/imagens não devem ter pontas arredondadas */
-.hero-visual-card,
-.site-plan-card,
-.site-plan-frame img,
-.possibility-frame,
-.possibility-slide,
-.possibility-overlay {
-  border-radius: 0 !important;
-}
-
-/* Se existir máscara arredondada em pseudo-elementos, remove */
-.hero-visual-card::before,
-.hero-visual-card::after,
-.site-plan-card::before,
-.site-plan-card::after,
-.possibility-frame::before,
-.possibility-frame::after {
-  border-radius: 0 !important;
-}
-
-/* Glow leve para textos */
-body,
-p,
-li,
-a,
-span,
-small,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.display,
-.mono,
-.hero-title,
-.hero-lead,
-.hero-note,
-.eyebrow,
-.section-title,
-.section-kicker,
-.hero-nav,
-.nav-logo,
-.topbar-inner,
-.benefit-card h3,
-.benefit-card p,
-.possibility-caption,
-.site-plan-frame figcaption {
-  text-shadow:
-    0 0 6px rgba(247, 241, 223, 0.10),
-    0 0 14px rgba(216, 192, 92, 0.08) !important;
-}
-
-/* Glow leve para botões e chips */
-button,
-.btn,
-.btn-primary,
-.btn-ghost,
-.inline-btn,
-.chip,
-.hero-chip,
-.hero-pills .chip {
-  text-shadow:
-    0 0 8px rgba(247, 241, 223, 0.18),
-    0 0 16px rgba(216, 192, 92, 0.14) !important;
-  box-shadow:
-    0 0 0 1px rgba(216, 192, 92, 0.20),
-    0 0 12px rgba(216, 192, 92, 0.14) !important;
-}
-
-/* Glow sutil também para a marca do topo */
-.brand-mark,
-.nav-logo,
-.round-icon {
-  text-shadow:
-    0 0 8px rgba(247, 241, 223, 0.18),
-    0 0 16px rgba(216, 192, 92, 0.12) !important;
-}
-
-
-/* =========================================================
-   PATCH TIPOGRAFIA — ESPAÇAMENTO ÓTICO MAIS LIMPO
-   ========================================================= */
-
-/* Títulos grandes: menos compressão, leitura mais natural */
-.display,
-.hero-title,
-h1,
-h2,
-.proof-heading h2,
-.visit-panel h2,
-.cta-panel h2,
-.commercial-panel h3,
-.possibility-caption strong {
-  letter-spacing: -0.045em !important;
-  text-rendering: geometricPrecision;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Títulos muito grandes mantêm impacto, mas sem colar demais */
-.hero-title {
-  letter-spacing: -0.055em !important;
-  word-spacing: 0.035em !important;
-}
-
-/* Textos mono: reduz espaçamento excessivo */
-.mono,
-.eyebrow,
-.hero-nav,
-.nav-logo,
-.topbar-inner,
-.site-plan-toolbar,
-.hero-tags span,
-.btn,
-.benefit-card span,
-.proof-grid span,
-.site-plan-notes span,
-.possibility-counter,
-.footer {
-  letter-spacing: 0.105em !important;
-  word-spacing: 0.045em !important;
-}
-
-/* Navegação e marca: mais legível */
-.brand-mark,
-.nav-logo,
-.hero-nav nav a,
-.topbar-note {
-  letter-spacing: 0.12em !important;
-  word-spacing: 0.04em !important;
-}
-
-/* Corpo de texto: leve ajuste de leitura */
-.hero-lead,
-.hero-note,
-.section-copy p,
-.atmosphere-copy p,
-.plan-copy > p,
-.cta-panel > p,
-.visit-panel > p,
-.commercial-panel > p,
-.section-heading p,
-.narrative-strip p,
-.benefit-card p,
-.possibility-caption p {
-  letter-spacing: -0.012em !important;
-  word-spacing: 0.02em !important;
-}
-
-/* Botões: mantém estética técnica, mas sem ficar apertado */
-.btn,
-.btn-primary,
-.btn-ghost,
-.inline-btn {
-  letter-spacing: 0.115em !important;
-  word-spacing: 0.045em !important;
-}
-
-
-/* =========================================================
-   PATCH — TÍTULOS CENTRALIZADOS E GLOW MAIS FORTE
-   ========================================================= */
-
-/* Centraliza o texto introdutório e o título da seção de benefícios */
-.narrative-strip,
-.narrative-strip p,
-.section-heading.experience-heading.benefits-heading-center,
-.section-heading.experience-heading.benefits-heading-center h2 {
-  text-align: center !important;
-  justify-items: center !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-.narrative-strip p {
-  max-width: 920px !important;
-}
-
-/* Glow mais forte em todos os títulos */
-h1,
-h2,
-h3,
-.display,
-.hero-title,
-.section-heading h2,
-.benefit-card h3,
-.possibility-caption strong,
-.site-plan-toolbar,
-.nav-logo,
-.brand-mark {
-  text-shadow:
-    0 0 10px rgba(255, 255, 255, 0.22),
-    0 0 24px rgba(247, 241, 223, 0.18),
-    0 0 48px rgba(216, 192, 92, 0.22),
-    0 0 88px rgba(216, 192, 92, 0.10) !important;
+@keyframes sensorNoiseShift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-0.35%, 0.2%); }
+  50% { transform: translate(0.25%, -0.15%); }
+  75% { transform: translate(-0.15%, 0.25%); }
+  100% { transform: translate(0, 0); }
 }

@@ -84,12 +84,12 @@ const CONFIG = {
     dofMaxBlur: 0.0048,
 
     // Bloom para as superfícies emissivas do GLB.
-    bloomStrength: 0.62,
-    bloomRadius: 0.72,
-    bloomThreshold: 0.36,
+    bloomStrength: 0.12,
+    bloomRadius: 0.34,
+    bloomThreshold: 0.72,
 
     // Realce do material Ceiling_Lights.
-    ceilingLightsEmissiveIntensity: 4.4
+    ceilingLightsEmissiveIntensity: 2.15
   }
 };
 
@@ -278,7 +278,7 @@ function preserveOriginalGLBMaterials(root) {
               `
               float backroomsFacing = backroomsCenterGlow(normal, -vViewPosition);
               vec3 backroomsWarmCore = mix(vec3(1.0), vec3(1.0, 0.93, 0.82), 0.45);
-              gl_FragColor.rgb += backroomsWarmCore * (0.18 + backroomsFacing * 0.75);
+              gl_FragColor.rgb += backroomsWarmCore * (0.035 + backroomsFacing * 0.20);
               #include <dithering_fragment>
               `
             );
