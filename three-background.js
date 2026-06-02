@@ -28,6 +28,11 @@ const CONFIG = {
   clearColor: 0x080807,
   exposure: 1.48,
 
+  fog: {
+    color: 0x0a0908,
+    density: 0.016
+  },
+
   camera: {
     // Câmera restaurada da versão que tinha enquadramento correto.
     position: new THREE.Vector3(-12.121020317077637, 0.8076560497283936, 0.593407154083252),
@@ -117,6 +122,7 @@ renderer.shadowMap.enabled = false;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.clearColor);
+scene.fog = new THREE.FogExp2(CONFIG.fog.color, CONFIG.fog.density);
 
 const camera = new THREE.PerspectiveCamera(
   CONFIG.camera.fov,
