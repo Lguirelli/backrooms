@@ -3486,3 +3486,59 @@ body.usage-modal-open {
     --card-opacity: 0 !important;
   }
 }
+
+
+/* === Ajuste mobile: remover margem de segurança e corte bruto do carrossel === */
+@media (max-width: 760px) {
+  .usage-section {
+    overflow: visible !important;
+  }
+
+  .usage-panel.max-wrap,
+  .usage-panel {
+    width: 100vw !important;
+    max-width: none !important;
+    margin-left: calc(50% - 50vw) !important;
+    margin-right: calc(50% - 50vw) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: visible !important;
+  }
+
+  .usage-heading-centered {
+    width: min(88vw, 420px) !important;
+    max-width: 88vw !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .usage-carousel {
+    width: 100vw !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: visible !important;
+    clip-path: none !important;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
+
+  .usage-track {
+    overflow: visible !important;
+  }
+
+  .usage-card {
+    width: min(56vw, 232px) !important;
+    min-height: 202px !important;
+  }
+
+  .usage-card.is-left {
+    --card-x: -34vw !important;
+    --card-opacity: 0.38 !important;
+  }
+
+  .usage-card.is-right {
+    --card-x: 34vw !important;
+    --card-opacity: 0.38 !important;
+  }
+}
